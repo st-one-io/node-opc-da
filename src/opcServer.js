@@ -13,7 +13,7 @@ const OPCItemProperties = require('./opcItemProperties');
 const OPCGroupStateManager = require('./opcGroupStateManager');
 const filetime = require('./filetime');
 
-const dcom = require('dcom');
+const { CallBuilder, ComString, ComValue, Flags, Pointer, Struct,   types } = require('dcom');
 
 const groupCache = new WeakMap();
 
@@ -108,23 +108,23 @@ class OPCServer {
         let deadband = !isNaN(opts.deadband) ? opts.deadband : this._groupDef.deadband;
         let localeID = !isNaN(opts.localeID) ? opts.localeID : this._defaultLocale;
 
-        let timeBiasCV = new dcom.ComValue(timeBias, dcom.types.INTEGER);
-        let deadbandCV = new dcom.ComValue(deadband, dcom.types.FLOAT);
+        let timeBiasCV = new ComValue(timeBias, types.INTEGER);
+        let deadbandCV = new ComValue(deadband, types.FLOAT);
 
-        let callObject = new dcom.CallBuilder(true);
+        let callObject = new CallBuilder(true);
         callObject.setOpnum(0);
 
-        callObject.addInParamAsString(name, dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR);
-        callObject.addInParamAsInt(active ? 1 : 0, dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsInt(updateRate, dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsInt(clientHandle, dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsPointer(new dcom.Pointer(timeBiasCV), dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsPointer(new dcom.Pointer(deadbandCV), dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsInt(localeID, dcom.Flags.FLAG_NULL);
-        callObject.addOutParamAsType(dcom.types.INTEGER, dcom.Flags.FLAG_NULL);
-        callObject.addOutParamAsType(dcom.types.INTEGER, dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsUUID(constants.iid.IOPCGroupStateMgt_IID, dcom.Flags.FLAG_NULL);
-        callObject.addOutParamAsType(dcom.types.COMOBJECT, dcom.Flags.FLAG_NULL);
+        callObject.addInParamAsString(name, Flags.FLAG_REPRESENTATION_STRING_LPWSTR);
+        callObject.addInParamAsInt(active ? 1 : 0, Flags.FLAG_NULL);
+        callObject.addInParamAsInt(updateRate, Flags.FLAG_NULL);
+        callObject.addInParamAsInt(clientHandle, Flags.FLAG_NULL);
+        callObject.addInParamAsPointer(new Pointer(timeBiasCV), Flags.FLAG_NULL);
+        callObject.addInParamAsPointer(new Pointer(deadbandCV), Flags.FLAG_NULL);
+        callObject.addInParamAsInt(localeID, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(types.INTEGER, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(types.INTEGER, Flags.FLAG_NULL);
+        callObject.addInParamAsUUID(constants.iid.IOPCGroupStateMgt_IID, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(types.COMOBJECT, Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
@@ -144,17 +144,17 @@ class OPCServer {
     async getErrorString(error, localeID) {
         if (!this._comObj) throw new Error("Not initialized");
 
-        let callObject = new dcom.CallBuilder(true);
+        let callObject = new CallBuilder(true);
         callObject.setOpnum(1);
 
         localeID = localeID || this._defaultLocale;
 
-        let outString = new dcom.ComValue(new dcom.ComString(dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR), dcom.types.COMSTRING);
+        let outString = new ComValue(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR), types.COMSTRING);
 
-        callObject.addInParamAsInt(error, dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsInt(localeID, dcom.Flags.FLAG_NULL);
-        callObject.addOutParamAsObject(outString, dcom.Flags.FLAG_NULL);
-        //callObject.addOutParamAsObject(new dcom.Pointer(new dcom.ComString(dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR)), dcom.Flags.FLAG_NULL);
+        callObject.addInParamAsInt(error, Flags.FLAG_NULL);
+        callObject.addInParamAsInt(localeID, Flags.FLAG_NULL);
+        callObject.addOutParamAsObject(outString, Flags.FLAG_NULL);
+        //callObject.addOutParamAsObject(new Pointer(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR)), Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
@@ -171,12 +171,12 @@ class OPCServer {
     async getGroupByName(name) {
         if (!this._comObj) throw new Error("Not initialized");
 
-        let callObject = new dcom.CallBuilder(true);
+        let callObject = new CallBuilder(true);
         callObject.setOpnum(2);
 
-        callObject.addInParamAsString(name, dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR);
-        callObject.addInParamAsUUID(constants.iid.IOPCGroupStateMgt_IID, dcom.Flags.FLAG_NULL);
-        callObject.addOutParamAsType(dcom.types.COMOBJECT, dcom.Flags.FLAG_NULL);
+        callObject.addInParamAsString(name, Flags.FLAG_REPRESENTATION_STRING_LPWSTR);
+        callObject.addInParamAsUUID(constants.iid.IOPCGroupStateMgt_IID, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(types.COMOBJECT, Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
@@ -192,25 +192,25 @@ class OPCServer {
     async getStatus() {
         if (!this._comObj) throw new Error("Not initialized");
 
-        let statusStruct = new dcom.Struct();
-        statusStruct.addMember(new dcom.ComValue(filetime.getStruct(), dcom.types.STRUCT)); //startTime
-        statusStruct.addMember(new dcom.ComValue(filetime.getStruct(), dcom.types.STRUCT)); //currentTime
-        statusStruct.addMember(new dcom.ComValue(filetime.getStruct(), dcom.types.STRUCT)); //lastUpdate
-        statusStruct.addMember(new dcom.ComValue(null, dcom.types.SHORT)); //serverState
-        statusStruct.addMember(new dcom.ComValue(null, dcom.types.INTEGER)); //groupCount
-        statusStruct.addMember(new dcom.ComValue(null, dcom.types.INTEGER)); //bandwidth
-        statusStruct.addMember(new dcom.ComValue(null, dcom.types.SHORT)); //majorVersion
-        statusStruct.addMember(new dcom.ComValue(null, dcom.types.SHORT)); //minorVersion
-        statusStruct.addMember(new dcom.ComValue(null, dcom.types.SHORT)); //buildNumber
-        statusStruct.addMember(new dcom.ComValue(null, dcom.types.SHORT)); //reserved
-        let vendorInfoCV = new dcom.ComValue(new dcom.ComString(dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR), dcom.types.COMSTRING);
-        statusStruct.addMember(new dcom.ComValue(new dcom.Pointer(vendorInfoCV), dcom.types.POINTER)); //vendorInfo
+        let statusStruct = new Struct();
+        statusStruct.addMember(new ComValue(filetime.getStruct(), types.STRUCT)); //startTime
+        statusStruct.addMember(new ComValue(filetime.getStruct(), types.STRUCT)); //currentTime
+        statusStruct.addMember(new ComValue(filetime.getStruct(), types.STRUCT)); //lastUpdate
+        statusStruct.addMember(new ComValue(null, types.SHORT)); //serverState
+        statusStruct.addMember(new ComValue(null, types.INTEGER)); //groupCount
+        statusStruct.addMember(new ComValue(null, types.INTEGER)); //bandwidth
+        statusStruct.addMember(new ComValue(null, types.SHORT)); //majorVersion
+        statusStruct.addMember(new ComValue(null, types.SHORT)); //minorVersion
+        statusStruct.addMember(new ComValue(null, types.SHORT)); //buildNumber
+        statusStruct.addMember(new ComValue(null, types.SHORT)); //reserved
+        let vendorInfoCV = new ComValue(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR), types.COMSTRING);
+        statusStruct.addMember(new ComValue(new Pointer(vendorInfoCV), types.POINTER)); //vendorInfo
 
-        let statusStructPointer = new dcom.Pointer(new dcom.ComValue(statusStruct, dcom.types.STRUCT));
+        let statusStructPointer = new Pointer(new ComValue(statusStruct, types.STRUCT));
 
-        let callObject = new dcom.CallBuilder(true);
+        let callObject = new CallBuilder(true);
         callObject.setOpnum(3);
-        callObject.addOutParamAsObject(new dcom.ComValue(statusStructPointer, dcom.types.STRUCT), dcom.Flags.FLAG_NULL);
+        callObject.addOutParamAsObject(new ComValue(statusStructPointer, types.STRUCT), Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
@@ -248,11 +248,11 @@ class OPCServer {
             throw new Error("Cannot find handle for the provided group");
         }
 
-        let callObject = new dcom.CallBuilder(true);
+        let callObject = new CallBuilder(true);
         callObject.setOpnum(4);
 
-        callObject.addInParamAsInt(handle, dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsInt(force ? 1 : 0, dcom.Flags.FLAG_NULL);
+        callObject.addInParamAsInt(handle, Flags.FLAG_NULL);
+        callObject.addInParamAsInt(force ? 1 : 0, Flags.FLAG_NULL);
 
         await this._comObj.call(callObject);
     }
@@ -266,12 +266,12 @@ class OPCServer {
     async getGroups(scope) {
         if (!this._comObj) throw new Error("Not initialized");
 
-        let callObject = new dcom.CallBuilder(true);
+        let callObject = new CallBuilder(true);
         callObject.setOpnum(5);
 
-        callObject.addInParamAsShort(scope, dcom.Flags.FLAG_NULL);
-        callObject.addInParamAsUUID(constants.iid.IEnumString_IID, dcom.Flags.FLAG_NULL);
-        callObject.addOutParamAsType(dcom.types.COMOBJECT, dcom.Flags.FLAG_NULL);
+        callObject.addInParamAsShort(scope, Flags.FLAG_NULL);
+        callObject.addInParamAsUUID(constants.iid.IEnumString_IID, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(types.COMOBJECT, Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
