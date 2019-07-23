@@ -5,6 +5,9 @@
 */
 
 const constants = require('./constants.js');
+const filetime = require('./filetime');
+
+const { CallBuilder, ComArray, ComValue, Flags, Pointer, Struct, Variant, types } = require('dcom');
 
 /**
  * Represents an OPC Sync IO Object
@@ -37,20 +40,62 @@ class OPCSyncIO {
   /**
    * 
    * @param {number} source 
-   * @param {number[]} hanldes an array of server handles
+   * @param {number[]} handles an array of server handles
    * @returns {Promise<object[]>}
    * @opNum 0
    */
-  async read(source, hanldes) {
+  async read(source, handles) {
     if (!this._comObj) throw new Error("Not initialized");
 
-    //should return an array of {clientHandle, timestamp, quality, value}
+    if (!(handles.length > 0)) return [];
+
+    // TODO maybe we can have a single static instance of this,
+    // without the need to instantiate one every call. To be tested
+    let itemStateStruct = new Struct();
+    itemStateStruct.addMember(new ComValue(null, types.INTEGER));
+    itemStateStruct.addMember(new ComValue(filetime.getStruct(), types.STRUCT));
+    itemStateStruct.addMember(new ComValue(null, types.SHORT));
+    itemStateStruct.addMember(new ComValue(null, types.SHORT));
+    itemStateStruct.addMember(new ComValue(null, types.VARIANT));
+
+    let callObject = new CallBuilder(true);
+    callObject.setOpnum(0);
+
+    callObject.addInParamAsShort(source, Flags.FLAG_NULL);
+    callObject.addInParamAsInt(handles.length, Flags.FLAG_NULL);
+    callObject.addInParamAsArray(new ComArray(new ComValue(handles, types.INTEGER), true), Flags.FLAG_NULL);
+    let resStructArray = new ComArray(new ComValue(itemStateStruct, types.STRUCT), null, 1, true)
+    let errCodesArray = new ComArray(new ComValue(null, types.INTEGER), null, 1, true)
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
+
+    let result = await this._comObj.call(callObject);
+
+    let results = result[0].getReferent().getArrayInstance();
+    let errorCodes = result[1].getReferent().getArrayInstance();
+
+    let res = [];
+    for (let i = 0; i < handles.length; i++) {
+      let resObj = {
+        errorCode: errorCodes[i],
+        clientHandle: results[i].getMember(0),
+        timestamp: filetime.fromStruct(results[i].getMember(1)).getDate(),
+        quality: results[i].getMember(2),
+        reserved: results[i].getMember(3),
+        value: results[i].getMember(4),
+        
+      };
+      res.push(resObj);
+    }
+
+    return res;
   }
 
   /**
    * 
    * @param {object[]} writes 
    * @param {number} writes[].handle
+   * @param {number} writes[].type
    * @param {*} writes[].value
    * @returns {Promise<number[]>} error codes
    * @opNum 1
@@ -58,6 +103,31 @@ class OPCSyncIO {
   async write(writes) {
     if (!this._comObj) throw new Error("Not initialized");
 
+    if (!(writes.length > 0)) return [];
+
+    let callObject = new CallBuilder(true);
+    callObject.setOpnum(0);
+
+    let handles = [];
+    let values = [];
+    for (const write of writes) {
+      let valVariant = new Variant(new ComValue(write.value, write.type), true);
+      if(Array.isArray(write.value) && write.type == types.BOOLEAN) {
+        valVariant.setFlag(Flags.FLAG_REPRESENTATION_VARIANT_BOOL);
+      }
+      handles.push(write.handle);
+      values.push(valVariant);
+    }
+
+    callObject.addInParamAsInt(writes.length, Flags.FLAG_NULL);
+    callObject.addInParamAsArray(new ComArray(new ComValue(handles, types.INTEGER), true), Flags.FLAG_NULL);
+    callObject.addInParamAsArray(new ComArray(new ComValue(values, types.VARIANT), true), Flags.FLAG_NULL);
+    let errCodesArray = new ComArray(new ComValue(null, types.INTEGER), null, 1, true)
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
+
+    let result = await this._comObj.call(callObject);
+
+    return result[0].getReferent().getArrayInstance();
   }
 
 }
