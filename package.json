@@ -18,5 +18,8 @@
     "hardware"
   ],
   "author": "Guilherme Francescon <guilherme.francescon@netsmarttech.com>",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "dependencies": {
+    "dcom": "file:../node-dcom"
+  }
 }

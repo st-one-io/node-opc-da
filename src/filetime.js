@@ -56,8 +56,8 @@ class FileTime {
  */
 function getStruct(){
     let struct = new Struct();
-    struct.addMember("Integer"); //lo
-    struct.addMember("Integer"); //hi
+    struct.addMember(0); //lo
+    struct.addMember(0); //hi
 
     return struct;
 }

@@ -13,7 +13,7 @@ const OPCItemProperties = require('./opcItemProperties');
 const OPCGroupStateManager = require('./opcGroupStateManager');
 const filetime = require('./filetime');
 
-const { CallBuilder, ComString, ComValue, Flags, Pointer, Struct,   types } = require('dcom');
+const { CallBuilder, ComString, ComValue, Flags, Pointer, Struct, Types } = require('dcom');
 
 const groupCache = new WeakMap();
 
@@ -108,8 +108,8 @@ class OPCServer {
         let deadband = !isNaN(opts.deadband) ? opts.deadband : this._groupDef.deadband;
         let localeID = !isNaN(opts.localeID) ? opts.localeID : this._defaultLocale;
 
-        let timeBiasCV = new ComValue(timeBias, types.INTEGER);
-        let deadbandCV = new ComValue(deadband, types.FLOAT);
+        let timeBiasCV = new ComValue(timeBias, Types.INTEGER);
+        let deadbandCV = new ComValue(deadband, Types.FLOAT);
 
         let callObject = new CallBuilder(true);
         callObject.setOpnum(0);
@@ -121,10 +121,10 @@ class OPCServer {
         callObject.addInParamAsPointer(new Pointer(timeBiasCV), Flags.FLAG_NULL);
         callObject.addInParamAsPointer(new Pointer(deadbandCV), Flags.FLAG_NULL);
         callObject.addInParamAsInt(localeID, Flags.FLAG_NULL);
-        callObject.addOutParamAsType(types.INTEGER, Flags.FLAG_NULL);
-        callObject.addOutParamAsType(types.INTEGER, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(Types.INTEGER, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(Types.INTEGER, Flags.FLAG_NULL);
         callObject.addInParamAsUUID(constants.iid.IOPCGroupStateMgt_IID, Flags.FLAG_NULL);
-        callObject.addOutParamAsType(types.COMOBJECT, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(Types.COMOBJECT, Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
@@ -149,7 +149,7 @@ class OPCServer {
 
         localeID = localeID || this._defaultLocale;
 
-        let outString = new ComValue(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR), types.COMSTRING);
+        let outString = new ComValue(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR), Types.COMSTRING);
 
         callObject.addInParamAsInt(error, Flags.FLAG_NULL);
         callObject.addInParamAsInt(localeID, Flags.FLAG_NULL);
@@ -176,12 +176,12 @@ class OPCServer {
 
         callObject.addInParamAsString(name, Flags.FLAG_REPRESENTATION_STRING_LPWSTR);
         callObject.addInParamAsUUID(constants.iid.IOPCGroupStateMgt_IID, Flags.FLAG_NULL);
-        callObject.addOutParamAsType(types.COMOBJECT, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(Types.COMOBJECT, Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
         let group = new OPCGroupStateManager();
-        await group.init(result[2]);
+        await group.init(result[0]);
         return group;
     }
 
@@ -193,41 +193,41 @@ class OPCServer {
         if (!this._comObj) throw new Error("Not initialized");
 
         let statusStruct = new Struct();
-        statusStruct.addMember(new ComValue(filetime.getStruct(), types.STRUCT)); //startTime
-        statusStruct.addMember(new ComValue(filetime.getStruct(), types.STRUCT)); //currentTime
-        statusStruct.addMember(new ComValue(filetime.getStruct(), types.STRUCT)); //lastUpdate
-        statusStruct.addMember(new ComValue(null, types.SHORT)); //serverState
-        statusStruct.addMember(new ComValue(null, types.INTEGER)); //groupCount
-        statusStruct.addMember(new ComValue(null, types.INTEGER)); //bandwidth
-        statusStruct.addMember(new ComValue(null, types.SHORT)); //majorVersion
-        statusStruct.addMember(new ComValue(null, types.SHORT)); //minorVersion
-        statusStruct.addMember(new ComValue(null, types.SHORT)); //buildNumber
-        statusStruct.addMember(new ComValue(null, types.SHORT)); //reserved
-        let vendorInfoCV = new ComValue(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR), types.COMSTRING);
-        statusStruct.addMember(new ComValue(new Pointer(vendorInfoCV), types.POINTER)); //vendorInfo
+        statusStruct.addMember(new ComValue(filetime.getStruct(), Types.STRUCT)); //startTime
+        statusStruct.addMember(new ComValue(filetime.getStruct(), Types.STRUCT)); //currentTime
+        statusStruct.addMember(new ComValue(filetime.getStruct(), Types.STRUCT)); //lastUpdate
+        statusStruct.addMember(new ComValue(null, Types.SHORT)); //serverState
+        statusStruct.addMember(new ComValue(null, Types.INTEGER)); //groupCount
+        statusStruct.addMember(new ComValue(null, Types.INTEGER)); //bandwidth
+        statusStruct.addMember(new ComValue(null, Types.SHORT)); //majorVersion
+        statusStruct.addMember(new ComValue(null, Types.SHORT)); //minorVersion
+        statusStruct.addMember(new ComValue(null, Types.SHORT)); //buildNumber
+        statusStruct.addMember(new ComValue(null, Types.SHORT)); //reserved
+        let vendorInfoCV = new ComValue(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR), Types.COMSTRING);
+        statusStruct.addMember(new ComValue(new Pointer(vendorInfoCV), Types.POINTER)); //vendorInfo
 
-        let statusStructPointer = new Pointer(new ComValue(statusStruct, types.STRUCT));
+        let statusStructPointer = new Pointer(new ComValue(statusStruct, Types.STRUCT));
 
         let callObject = new CallBuilder(true);
         callObject.setOpnum(3);
-        callObject.addOutParamAsObject(new ComValue(statusStructPointer, types.STRUCT), Flags.FLAG_NULL);
+        callObject.addOutParamAsObject(new ComValue(statusStructPointer, Types.POINTER), Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
-        let resStruct = result[0].getReferent();
+        let resStruct = result[0].getValue().getReferent();
 
         return {
-            startTime: filetime.fromStruct(resStruct.getMember(0)).getDate(),
-            currentTime: filetime.fromStruct(resStruct.getMember(1)).getDate(),
-            lastUpdateTime: filetime.fromStruct(resStruct.getMember(2)).getDate(),
-            serverState: resStruct.getMember(3),
-            groupCount: resStruct.getMember(4),
-            bandWidth: resStruct.getMember(5),
-            majorVersion: resStruct.getMember(6),
-            minorVersion: resStruct.getMember(7),
-            buildNumber: resStruct.getMember(8),
-            reserved: resStruct.getMember(9),
-            vendorInfo: resStruct.getMember(10).getReferent().getString()
+            startTime: filetime.fromStruct(resStruct.getMember(0).getValue()).getDate(),
+            currentTime: filetime.fromStruct(resStruct.getMember(1).getValue()).getDate(),
+            lastUpdateTime: filetime.fromStruct(resStruct.getMember(2).getValue()).getDate(),
+            serverState: resStruct.getMember(3).getValue(),
+            groupCount: resStruct.getMember(4).getValue(),
+            bandWidth: resStruct.getMember(5).getValue(),
+            majorVersion: resStruct.getMember(6).getValue(),
+            minorVersion: resStruct.getMember(7).getValue(),
+            buildNumber: resStruct.getMember(8).getValue(),
+            reserved: resStruct.getMember(9).getValue(),
+            vendorInfo: resStruct.getMember(10).getValue().getReferent().getString()
         };
     }
 
@@ -271,7 +271,7 @@ class OPCServer {
 
         callObject.addInParamAsShort(scope, Flags.FLAG_NULL);
         callObject.addInParamAsUUID(constants.iid.IEnumString_IID, Flags.FLAG_NULL);
-        callObject.addOutParamAsType(types.COMOBJECT, Flags.FLAG_NULL);
+        callObject.addOutParamAsType(Types.COMOBJECT, Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
 
@@ -293,21 +293,21 @@ class OPCServer {
 
         if (!this._opcCommon) {
             let opcCommon = new OPCCommon(); //TODO pass comObj handle
-            await this._opcCommon.init(this._comObj);
+            await opcCommon.init(this._comObj);
             this._opcCommon = opcCommon;
         }
         return this._opcCommon;
     }
 
     /**
-     * @returns {Promise<OPCBrowser>} an OPCBrowser insance of this server
+     * @returns {Promise<OPCBrowser>} an OPCBrowser instance of this server
      */
     async getBrowser() {
         if (!this._comObj) throw new Error("Not initialized");
 
         if (!this._opcBrowser) {
             let opcBrowser = new OPCBrowser(); //TODO pass comObj handle
-            await this._opcBrowser.init(this._comObj);
+            await opcBrowser.init(this._comObj);
             this._opcBrowser = opcBrowser;
         }
         return this._opcBrowser;
@@ -321,7 +321,7 @@ class OPCServer {
 
         if (!this._opcItemIO) {
             let opcItemIO = new OPCItemIO(); //TODO pass comObj handle
-            await this._opcItemIO.init(this._comObj);
+            await opcItemIO.init(this._comObj);
             this._opcItemIO = opcItemIO;
         }
         return this._opcItemIO;
@@ -335,7 +335,7 @@ class OPCServer {
 
         if (!this._opcItemProperties) {
             let opcItemProperties = new OPCItemProperties(); //TODO pass comObj handle
-            await this._opcItemProperties.init(this._comObj);
+            await opcItemProperties.init(this._comObj);
             this._opcItemProperties = opcItemProperties;
         }
         return this._opcItemProperties;

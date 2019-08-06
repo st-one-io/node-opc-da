@@ -14,6 +14,7 @@ const OPCItemManager = require('./opcItemManager');
 const OPCItemProperties = require('./opcItemProperties');
 const OPCServer = require('./opcServer');
 const OPCSyncIO = require('./opcSyncIO');
+const {ComServer, Session, Clsid} = require('dcom');
 
 /**
  * 
@@ -24,7 +25,15 @@ const OPCSyncIO = require('./opcSyncIO');
  * @returns {Promise<OPCServer>}
  */
 async function createServer(domain, user, pass, clsid) {
+  this.session = new Session();
+  this.session = this.session.createSession(domain, user, pass);
 
+  this.clsid = new Clsid(clsid);
+
+  this.server = new ComServer(this.clsid, domain, this.session);
+  
+  await this.server.init();
+  return this.server.createInstance();
 }
 
 module.exports = {
