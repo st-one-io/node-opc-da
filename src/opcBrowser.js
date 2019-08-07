@@ -99,7 +99,9 @@ class OPCBrowser {
       throw new Error(e);
     }
 
-    return new EnumString().init(result[0]);
+    let enumResults = new EnumString();
+    await enumResults.init(result[0]);
+    return enumResults;
   }
 
   /**

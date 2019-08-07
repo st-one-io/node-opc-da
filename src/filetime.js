@@ -43,7 +43,7 @@ class FileTime {
         j /= 10000;
         j -= 11644473600000;
 
-        this._date = new Date(j);
+        this._date = new Date(j).toUTCString();
     }
 
     toString(){
