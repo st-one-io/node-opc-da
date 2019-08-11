@@ -5,7 +5,7 @@
 */
 
 const constants = require('./constants.js');
-const {CallBuilder, ComString, Types, Pointer, Flags} = require('dcom');
+const {CallBuilder, ComString, ComValue, Types, Pointer, Flags} = require('dcom');
 const EnumString = require('./enumString');
 
 /**
@@ -118,12 +118,16 @@ class OPCBrowser {
     let callObject = new CallBuilder(true);
     callObject.setOpnum(3);
 
+    let strValue = new ComValue(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR), Types.COMSTRING);
+    let strPointerValue = new ComValue(new Pointer(strValue), Types.POINTER);
     callObject.addInParamAsString(item, Flags.FLAG_REPRESENTATION_STRING_LPWSTR );
-    callObject.addOutParamAsObject(new Pointer(new ComString (Flags.FLAG_REPRESENTATION_STRING_LPWSTR)), Flags.FLAG_NULL);
+    callObject.addOutParamAsObject(strPointerValue, Flags.FLAG_NULL);
 
     let result = await this._comObj.call(callObject);
 
-    return new ComString(new Pointer(result[0]).getReferent()).getString ();
+    let resultPtr = result[0].getValue();
+    let resultPtrRef = resultPtr.getReferent();
+    return resultPtrRef.getString();
   }
 
   /**
@@ -184,7 +188,7 @@ class OPCBrowser {
     let branches = await enumBranches.asArray();
     for (const branch of branches) {
       await this.changePosition(branch, constants.opc.browse.direction.DOWN);
-      res[branch] = this.browseLevel();
+      res[branch] = await this.browseLevel();
       await this.changePosition(null, constants.opc.browse.direction.UP);
     }
 
