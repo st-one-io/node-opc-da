@@ -38,7 +38,7 @@ class OPCBrowser {
 
   /**
    *
-   * @returns {Promise}
+   * @returns {Promise<number>}
    * @opNum 0
    */
   async queryOrganization() {
@@ -49,7 +49,8 @@ class OPCBrowser {
 
     callObject.addOutParamAsType(Types.SHORT, Flags.FLAG_NULL);
 
-    return await this._comObj.call(callObject);
+    let result = await this._comObj.call(callObject);
+    return result[0];
   }
 
   /**
@@ -77,7 +78,7 @@ class OPCBrowser {
    * @param {string} [filter=""]
    * @param {number} [dataType=0]
    * @param {number} [accessRights=0]
-   * @returns {Promise<Array<string>>}
+   * @returns {Promise<EnumString>}
    * @opNum 2
    */
   async browse(type, filter, accessRights, dataType) {
@@ -92,12 +93,7 @@ class OPCBrowser {
     callObject.addInParamAsInt(accessRights, Flags.FLAG_NULL);
     callObject.addOutParamAsType(Types.COMOBJECT, Flags.FLAG_NULL);
 
-    let result = new Array();
-    try{
-      result = await this._comObj.call(callObject);
-    } catch(e){
-      throw new Error(e);
-    }
+    let result = await this._comObj.call(callObject);
 
     let enumResults = new EnumString();
     await enumResults.init(result[0]);
@@ -125,7 +121,7 @@ class OPCBrowser {
     callObject.addInParamAsString(item, Flags.FLAG_REPRESENTATION_STRING_LPWSTR );
     callObject.addOutParamAsObject(new Pointer(new ComString (Flags.FLAG_REPRESENTATION_STRING_LPWSTR)), Flags.FLAG_NULL);
 
-    let result = this._comObj.call(callObject);
+    let result = await this._comObj.call(callObject);
 
     return new ComString(new Pointer(result[0]).getReferent()).getString ();
   }
@@ -134,7 +130,7 @@ class OPCBrowser {
    * Returns the possible access paths for an item
    * 
    * @param {string} itemID the item to query
-   * @returns {Promise<Array<string>>} the complete item ID
+   * @returns {Promise<EnumString>} the complete item ID
    * @opNum 4
    */
   async browseAccessPaths(itemID) {
@@ -146,14 +142,11 @@ class OPCBrowser {
     callObject.addInParamAsString(itemID, Flags.FLAG_REPRESENTATION_STRING_LPWSTR);
     callObject.addOutParamAsType (Types.COMOBJECT, Flags.FLAG_NULL );
 
-    let result = new Array();
-    try{
-      result = this._comObj.call(callObject);
-    } catch(e) {
-      throw new Error(e);
-    }
+    let result = await this._comObj.call(callObject);
 
-    return await new EnumString().init(result[0]);
+    let enumResults = new EnumString();
+    await enumResults.init(result[0]);
+    return enumResults;
   }
 
   // -------
@@ -163,7 +156,8 @@ class OPCBrowser {
    */
   async browseAllFlat() {
     await this.changePosition(null, constants.opc.browse.direction.TO);
-    return await this.browse(constants.opc.browse.type.FLAT);
+    let enumItems = await this.browse(constants.opc.browse.type.FLAT);
+    return await enumItems.asArray();
   }
 
   /**
@@ -181,12 +175,13 @@ class OPCBrowser {
     let res = {}
 
     // get items on this level
-    let items = await this.browse(constants.opc.browse.type.LEAF);
-    console.log();
+    let enumItems = await this.browse(constants.opc.browse.type.LEAF);
+    let items = await enumItems.asArray();
     for (const item of items) {
       res[item] = await this.getItemID(item);
     }
-    let branches = await this.browse(constants.opc.browse.type.BRANCH);
+    let enumBranches = await this.browse(constants.opc.browse.type.BRANCH);
+    let branches = await enumBranches.asArray();
     for (const branch of branches) {
       await this.changePosition(branch, constants.opc.browse.direction.DOWN);
       res[branch] = this.browseLevel();
