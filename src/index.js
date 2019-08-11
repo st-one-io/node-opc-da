@@ -18,22 +18,27 @@ const {ComServer, Session, Clsid} = require('dcom');
 
 /**
  * 
+ * @param {string} address
  * @param {string} domain 
  * @param {string} user 
  * @param {string} pass 
  * @param {string} clsid 
- * @returns {Promise<OPCServer>}
+ * @param {object} [opts] 
+ * @returns {Promise<{comServer:ComServer, opcServer:OPCServer}>}
  */
-async function createServer(domain, user, pass, clsid) {
-  this.session = new Session();
-  this.session = this.session.createSession(domain, user, pass);
+async function createServer(address, domain, user, pass, clsid, opts) {
+  let session = new Session();
+  session = session.createSession(domain, user, pass);
 
-  this.clsid = new Clsid(clsid);
+  let comServer = new ComServer(new Clsid(clsid), address, session);
+  await comServer.init();
 
-  this.server = new ComServer(this.clsid, domain, this.session);
-  
-  await this.server.init();
-  return this.server.createInstance();
+  let comObject = await comServer.createInstance();
+
+  let opcServer = new OPCServer(opts);
+  await opcServer.init(comObject);
+
+  return {comServer, opcServer};
 }
 
 module.exports = {
