@@ -56,10 +56,10 @@ class EnumString {
         let callObject = new dcom.CallBuilder(true);
         callObject.setOpnum(0);
 
+        let strValue = new dcom.ComValue(new dcom.ComString(dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR), dcom.Types.COMSTRING);
+        let strArrayValue = new dcom.ComValue(new dcom.ComArray(strValue, null, 1, true, true), dcom.Types.COMARRAY);
         callObject.addInParamAsInt(num, dcom.Flags.FLAG_NULL);
-        callObject.addOutParamAsObject(new dcom.ComValue(new dcom.ComArray(new dcom.ComValue(
-            new dcom.ComString(dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR), dcom.Types.COMSTRING), null, 1, true, true), dcom.Types.COMARRAY)
-            , dcom.Flags.FLAG_NULL);
+        callObject.addOutParamAsObject(strArrayValue, dcom.Flags.FLAG_NULL);
         callObject.addOutParamAsType(dcom.Types.INTEGER, dcom.Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
