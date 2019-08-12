@@ -63,7 +63,11 @@ class EnumString {
         callObject.addOutParamAsType(dcom.Types.INTEGER, dcom.Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
-        let resultData =  result[0].getArrayInstance();
+        let resultData;
+        if (result instanceof dcom.ComValue)
+            resultData = result[0].getValue().getArrayInstance();
+        else 
+            resultData = result[0].getArrayInstance();
         let count = result[1];
 
         let res = [];
