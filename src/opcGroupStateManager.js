@@ -182,7 +182,7 @@ class OPCGroupStateManager extends EventEmitter {
 
     if (!this._opcItemManager) {
       let opcItemManager = new OPCItemManager();
-      await this._opcItemManager.init(this._comObj);
+      await opcItemManager.init(this._comObj);
       this._opcItemManager = opcItemManager;
     }
     return this._opcItemManager;
@@ -196,7 +196,7 @@ class OPCGroupStateManager extends EventEmitter {
 
     if (!this._syncIO) {
       let syncIO = new OPCSyncIO();
-      await this._syncIO.init(this._comObj);
+      await syncIO.init(this._comObj);
       this._syncIO = syncIO;
     }
     return this._syncIO;
@@ -210,7 +210,7 @@ class OPCGroupStateManager extends EventEmitter {
 
     if (!this._asyncIO) {
       let asyncIO = new OPCAsyncIO();
-      await this._asyncIO.init(this._comObj);
+      await asyncIO.init(this._comObj);
       this._asyncIO = asyncIO;
     }
     return this._asyncIO;

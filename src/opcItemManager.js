@@ -6,7 +6,7 @@
 
 const constants = require('./constants.js');
 
-const { CallBuilder, ComArray, ComString, ComValue, Flags, Pointer, Struct, Variant, types } = require('dcom');
+const { CallBuilder, ComArray, ComString, ComValue, Flags, Pointer, Struct, Variant, Types } = require('dcom');
 
 /**
  * 
@@ -42,14 +42,14 @@ function getItemDefStruct(item) {
   }
 
   let struct = new Struct();
-  struct.addMember(new ComValue(new ComString(accessPath, Flags.FLAG_REPRESENTATION_STRING_LPWSTR), types.COMSTRING));
-  struct.addMember(new ComValue(new ComString(itemID, Flags.FLAG_REPRESENTATION_STRING_LPWSTR), types.COMSTRING));
-  struct.addMember(new ComValue(active ? 1 : 0, types.INTEGER));
-  struct.addMember(new ComValue(clientHandle, types.INTEGER));
-  struct.addMember(new ComValue(0, types.INTEGER)); //blob size
-  struct.addMember(new ComValue(new Pointer(null), types.POINTER)); // blob
-  struct.addMember(new ComValue(requestedDataType, types.SHORT));
-  struct.addMember(new ComValue(reserved, types.SHORT));
+  struct.addMember(new ComValue(new ComString(accessPath, Flags.FLAG_REPRESENTATION_STRING_LPWSTR), Types.COMSTRING));
+  struct.addMember(new ComValue(new ComString(itemID, Flags.FLAG_REPRESENTATION_STRING_LPWSTR), Types.COMSTRING));
+  struct.addMember(new ComValue(active ? 1 : 0, Types.INTEGER));
+  struct.addMember(new ComValue(clientHandle, Types.INTEGER));
+  struct.addMember(new ComValue(0, Types.INTEGER)); //blob size
+  struct.addMember(new ComValue(new Pointer(null), Types.POINTER)); // blob
+  struct.addMember(new ComValue(requestedDataType, Types.SHORT));
+  struct.addMember(new ComValue(reserved, Types.SHORT));
 
   return struct;
 }
@@ -60,12 +60,12 @@ function getItemDefStruct(item) {
 function getItemResultStruct() {
   let struct = new Struct();
 
-  struct.addMember(new ComValue(null, types.INTEGER)); // Server handle
-  struct.addMember(new ComValue(null, types.SHORT)); // data type
-  struct.addMember(new ComValue(null, types.SHORT)); // reserved
-  struct.addMember(new ComValue(null, types.INTEGER)); // access rights
-  struct.addMember(new ComValue(null, types.INTEGER)); // blob size
-  struct.addMember(new ComValue(new Pointer(new ComValue(new ComArray(new ComValue(null, types.BYTE), null, 1, true, false), types.COMARRAY)), types.INTEGER)); // blob size
+  struct.addMember(new ComValue(null, Types.INTEGER)); // Server handle
+  struct.addMember(new ComValue(null, Types.SHORT)); // data type
+  struct.addMember(new ComValue(null, Types.SHORT)); // reserved
+  struct.addMember(new ComValue(null, Types.INTEGER)); // access rights
+  struct.addMember(new ComValue(null, Types.INTEGER)); // blob size
+  struct.addMember(new ComValue(new Pointer(new ComValue(new ComArray(new ComValue(null, Types.BYTE), null, 1, true, false), Types.COMARRAY)), Types.POINTER)); // blob size
 
   return struct;
 }
@@ -120,17 +120,17 @@ class OPCItemManager {
       structs.push(getItemDefStruct(item));
     }
 
-    let itemArray = new ComArray(new ComValue(structs, types.STRUCT), true);
+    let itemArray = new ComArray(new ComValue(structs, Types.STRUCT), true);
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(0);
 
     callObject.addInParamAsInt(items.length, Flags.FLAG_NULL);
     callObject.addInParamAsArray(itemArray, Flags.FLAG_NULL);
-    let resStructArray = new ComArray(new ComValue(getItemResultStruct(), types.STRUCT), null, 1, true)
-    let errCodesArray = new ComArray(new ComValue(null, types.INTEGER), null, 1, true)
-    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
-    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
+    let resStructArray = new ComArray(new ComValue(getItemResultStruct(), Types.STRUCT), null, 1, true)
+    let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
     let result = await this._comObj.call(callObject);
 
@@ -167,7 +167,7 @@ class OPCItemManager {
       structs.push(getItemDefStruct(item));
     }
 
-    let itemArray = new ComArray(new ComValue(structs, types.STRUCT), true);
+    let itemArray = new ComArray(new ComValue(structs, Types.STRUCT), true);
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(1);
@@ -175,10 +175,10 @@ class OPCItemManager {
     callObject.addInParamAsInt(items.length, Flags.FLAG_NULL);
     callObject.addInParamAsArray(itemArray, Flags.FLAG_NULL);
     callObject.addInParamAsInt(0, Flags.FLAG_NULL); // don't update blobs
-    let resStructArray = new ComArray(new ComValue(getItemResultStruct(), types.STRUCT), null, 1, true)
-    let errCodesArray = new ComArray(new ComValue(null, types.INTEGER), null, 1, true)
-    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
-    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
+    let resStructArray = new ComArray(new ComValue(getItemResultStruct(), Types.STRUCT), null, 1, true)
+    let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
     let result = await this._comObj.call(callObject);
 
@@ -210,15 +210,15 @@ class OPCItemManager {
 
     if (!(items.length > 0)) return [];
 
-    let itemArray = new ComArray(new ComValue(items, types.INTEGER), true);
+    let itemArray = new ComArray(new ComValue(items, Types.INTEGER), true);
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(2);
 
     callObject.addInParamAsInt(items.length, Flags.FLAG_NULL);
     callObject.addInParamAsArray(itemArray, Flags.FLAG_NULL);
-    let errCodesArray = new ComArray(new ComValue(null, types.INTEGER), null, 1, true)
-    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
+    let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
     let result = await this._comObj.call(callObject);
 
@@ -237,7 +237,7 @@ class OPCItemManager {
 
     if (!(items.length > 0)) return [];
 
-    let itemArray = new ComArray(new ComValue(items, types.INTEGER), true);
+    let itemArray = new ComArray(new ComValue(items, Types.INTEGER), true);
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(3);
@@ -245,8 +245,8 @@ class OPCItemManager {
     callObject.addInParamAsInt(items.length, Flags.FLAG_NULL);
     callObject.addInParamAsArray(itemArray, Flags.FLAG_NULL);
     callObject.addInParamAsInt(state ? 1 : 0, Flags.FLAG_NULL);
-    let errCodesArray = new ComArray(new ComValue(null, types.INTEGER), null, 1, true)
-    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
+    let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
     let result = await this._comObj.call(callObject);
 
@@ -267,8 +267,8 @@ class OPCItemManager {
 
     if (!(items.length > 0)) return [];
 
-    let itemArray = new ComArray(new ComValue(items, types.INTEGER), true);
-    let handlesArray = new ComArray(new ComValue(handles, types.INTEGER), true);
+    let itemArray = new ComArray(new ComValue(items, Types.INTEGER), true);
+    let handlesArray = new ComArray(new ComValue(handles, Types.INTEGER), true);
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(4);
@@ -276,8 +276,8 @@ class OPCItemManager {
     callObject.addInParamAsInt(items.length, Flags.FLAG_NULL);
     callObject.addInParamAsArray(itemArray, Flags.FLAG_NULL);
     callObject.addInParamAsArray(handlesArray, Flags.FLAG_NULL);
-    let errCodesArray = new ComArray(new ComValue(null, types.INTEGER), null, 1, true)
-    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, types.COMARRAY)), types.POINTER), Flags.FLAG_NULL);
+    let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
+    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
     let result = await this._comObj.call(callObject);
 

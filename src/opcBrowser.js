@@ -98,7 +98,7 @@ class OPCBrowser {
     } catch(e){
       throw new Error(e);
     }
-
+    
     let enumResults = new EnumString();
     await enumResults.init(result[0]);
     return enumResults;
@@ -152,8 +152,9 @@ class OPCBrowser {
     } catch(e) {
       throw new Error(e);
     }
-
-    return await new EnumString().init(result[0]);
+    let enumResult = new EnumString();
+    await enumResult.init(result[0]);
+    return enumResult;
   }
 
   // -------
@@ -163,7 +164,7 @@ class OPCBrowser {
    */
   async browseAllFlat() {
     await this.changePosition(null, constants.opc.browse.direction.TO);
-    return await this.browse(constants.opc.browse.type.FLAT);
+    return await this.browse(constants.opc.browse.type.FLAT, null, null, 0);
   }
 
   /**

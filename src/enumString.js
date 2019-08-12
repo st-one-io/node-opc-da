@@ -57,12 +57,13 @@ class EnumString {
         callObject.setOpnum(0);
 
         callObject.addInParamAsInt(num, dcom.Flags.FLAG_NULL);
-        callObject.addOutParamAsObject(new dcom.ComArray(new dcom.ComValue(
-            new dcom.ComString(dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR), dcom.Types.COMSTRING), null, 1, true, true), dcom.Flags.FLAG_NULL);
+        callObject.addOutParamAsObject(new dcom.ComValue(new dcom.ComArray(new dcom.ComValue(
+            new dcom.ComString(dcom.Flags.FLAG_REPRESENTATION_STRING_LPWSTR), dcom.Types.COMSTRING), null, 1, true, true), dcom.Types.COMARRAY)
+            , dcom.Flags.FLAG_NULL);
         callObject.addOutParamAsType(dcom.Types.INTEGER, dcom.Flags.FLAG_NULL);
 
         let result = await this._comObj.call(callObject);
-        let resultData = result[0].getArrayInstance();
+        let resultData =  result[0].getArrayInstance();
         let count = result[1];
 
         let res = [];
@@ -100,7 +101,7 @@ class EnumString {
         if (!this._comObj) throw new Error("Not initialized");
 
         let callObject = new dcom.CallBuilder(true);
-        callObject.setOpnum(1);
+        callObject.setOpnum(2);
 
         await this._comObj.call(callObject);
     }
