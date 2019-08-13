@@ -134,16 +134,16 @@ class OPCItemManager {
 
     let result = await this._comObj.call(callObject);
 
-    let results = result[0].getReferent().getArrayInstance();
-    let errorCodes = result[1].getReferent().getArrayInstance();
+    let results = result[0].getValue().getReferent().getArrayInstance();
+    let errorCodes = result[1].getValue().getReferent().getArrayInstance();
 
     let res = [];
     for (let i = 0; i < items.length; i++) {
       let resObj = {
-        serverHandle: results[i].getMember(0),
-        cannonicalDataType: results[i].getMember(1),
-        reserved: results[i].getMember(2),
-        accessRights: results[i].getMember(3)
+        serverHandle: results[i].getValue().getMember(0),
+        cannonicalDataType: results[i].getValue().getMember(1),
+        reserved: results[i].getValue().getMember(2),
+        accessRights: results[i].getValue().getMember(3)
       };
       res.push([errorCodes[i], resObj]);
     }
@@ -251,7 +251,12 @@ class OPCItemManager {
 
     let result = await this._comObj.call(callObject);
 
-    return result[0].getValue().getReferent().getArrayInstance();
+    let errorCodes = result[0].getValue().getReferent().getArrayInstance();
+    let results = new Array();
+    for (let i = 0; i < items.length; i++) {
+        results.push({value: items[i], errorCode: errorCodes[i]});
+    }
+    return results;
   }
 
   /**
@@ -282,7 +287,7 @@ class OPCItemManager {
 
     let result = await this._comObj.call(callObject);
 
-    return result[0].getReferent().getArrayInstance();
+    return result[0].getValue().getReferent().getArrayInstance();
   }
 }
 
