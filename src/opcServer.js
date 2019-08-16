@@ -79,9 +79,9 @@ class OPCServer {
 
         //TODO maybe paralelize this with Promise.all
         if (opcCommon) await opcCommon.end();
-        if (opcBrowser) await opcCommon.end();
-        if (opcItemIO) await opcCommon.end();
-        if (opcItemProperties) await opcCommon.end();
+        if (opcBrowser) await opcBrowser.end();
+        if (opcItemIO) await opcItemIO.end();
+        if (opcItemProperties) await opcItemProperties.end();
         await obj.release();
     }
 
@@ -129,7 +129,7 @@ class OPCServer {
         let result = await this._comObj.call(callObject);
 
         let group = new OPCGroupStateManager();
-        await group.init(result[2]);
+        await group.init(result[2].getValue());
         groupCache.set(group, clientHandle);
         return group;
     }

@@ -96,7 +96,7 @@ class OPCBrowser {
     let result = await this._comObj.call(callObject);
 
     let enumResults = new EnumString();
-    await enumResults.init(result[0]);
+    await enumResults.init(result[0].getValue());
     return enumResults;
   }
 

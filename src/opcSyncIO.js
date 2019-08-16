@@ -63,7 +63,12 @@ class OPCSyncIO {
 
     callObject.addInParamAsShort(source, Flags.FLAG_NULL);
     callObject.addInParamAsInt(handles.length, Flags.FLAG_NULL);
-    callObject.addInParamAsArray(new ComArray(new ComValue(handles, Types.INTEGER), true), Flags.FLAG_NULL);
+
+    let temporaryHandles = new Array();
+    for (let i = 0; i < handles.length; i++)
+      temporaryHandles.push(new ComValue(handles[i], Types.INTEGER));
+    callObject.addInParamAsArray(new ComArray(new ComValue(temporaryHandles, Types.INTEGER), true), Flags.FLAG_NULL);
+
     let resStructArray = new ComArray(new ComValue(itemStateStruct, Types.STRUCT), null, 1, true)
     let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
@@ -77,12 +82,12 @@ class OPCSyncIO {
     let res = [];
     for (let i = 0; i < handles.length; i++) {
       let resObj = {
-        errorCode: errorCodes[i],
-        clientHandle: results[i].getValue().getMember(0),
-        timestamp: filetime.fromStruct(results[i].getMember(1)).getDate(),
-        quality: results[i].getMember(2),
-        reserved: results[i].getMember(3),
-        value: results[i].getMember(4),
+        errorCode: errorCodes[i].getValue(),
+        clientHandle: results[i].getValue().getMember(0).getValue(),
+        timestamp: filetime.fromStruct(results[i].getValue().getMember(1).getValue()).getDate(),
+        quality: results[i].getValue().getMember(2).getValue(),
+        reserved: results[i].getValue().getMember(3).getValue(),
+        value: results[i].getValue().getMember(4).getValue().member.getValue().referent.obj.getValue(),
         
       };
       res.push(resObj);

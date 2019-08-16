@@ -117,7 +117,7 @@ class OPCItemManager {
 
     let structs = [];
     for (const item of items) {
-      structs.push(getItemDefStruct(item));
+      structs.push(new ComValue(getItemDefStruct(item), Types.STRUCT));
     }
 
     let itemArray = new ComArray(new ComValue(structs, Types.STRUCT), true);
@@ -140,6 +140,7 @@ class OPCItemManager {
     let res = [];
     for (let i = 0; i < items.length; i++) {
       let resObj = {
+        itemID: items[i].itemID,
         serverHandle: results[i].getValue().getMember(0),
         cannonicalDataType: results[i].getValue().getMember(1),
         reserved: results[i].getValue().getMember(2),
@@ -164,7 +165,7 @@ class OPCItemManager {
 
     let structs = [];
     for (const item of items) {
-      structs.push(getItemDefStruct(item));
+      structs.push(new ComValue(getItemDefStruct(item), Types.STRUCT));
     }
 
     let itemArray = new ComArray(new ComValue(structs, Types.STRUCT), true);
@@ -211,7 +212,12 @@ class OPCItemManager {
 
     if (!(items.length > 0)) return [];
 
-    let itemArray = new ComArray(new ComValue(items, Types.INTEGER), true);
+    let temporary = new Array();
+    for (let i = 0; i < items.length; i++) {
+      temporary.push(new ComValue(items[i], Types.INTEGER));
+    }
+
+    let itemArray = new ComArray(new ComValue(temporary, Types.INTEGER), true);
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(2);
@@ -223,7 +229,7 @@ class OPCItemManager {
 
     let result = await this._comObj.call(callObject);
 
-    return result[0].getReferent().getArrayInstance();
+    return result[0].getValue().getReferent().getArrayInstance();
   }
 
   /**
@@ -238,7 +244,11 @@ class OPCItemManager {
 
     if (!(items.length > 0)) return [];
 
-    let itemArray = new ComArray(new ComValue(items, Types.INTEGER), true);
+    let temporary = new Array();
+    for (let i = 0; i < items.length; i++)
+      temporary.push(new ComValue(items[i], Types.INTEGER));
+
+    let itemArray = new ComArray(new ComValue(temporary, Types.INTEGER), true);
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(3);
@@ -273,8 +283,16 @@ class OPCItemManager {
 
     if (!(items.length > 0)) return [];
 
-    let itemArray = new ComArray(new ComValue(items, Types.INTEGER), true);
-    let handlesArray = new ComArray(new ComValue(handles, Types.INTEGER), true);
+    let temporaryItems = new Array();
+    for (let i = 0; i < items.length; i++)
+      temporaryItems.push(new ComValue(items[i], Types.INTEGER));
+
+    let temporaryHandles = new Array();
+    for (let i = 0; i < handles.length; i++)
+    temporaryHandles.push(new ComValue(handles[i], Types.INTEGER));
+
+    let itemArray = new ComArray(new ComValue(temporaryItems, Types.INTEGER), true);
+    let handlesArray = new ComArray(new ComValue(temporaryHandles, Types.INTEGER), true);
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(4);

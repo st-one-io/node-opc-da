@@ -67,12 +67,12 @@ class EnumString {
         if (result instanceof dcom.ComValue)
             resultData = result[0].getValue().getArrayInstance();
         else 
-            resultData = result[0].getArrayInstance();
-        let count = result[1];
+            resultData = result[0].getValue().getArrayInstance();
+        let count = result[1].getValue();
 
         let res = [];
         for (let i = 0; i < count; i++) {
-            res.push(resultData[i].getString());
+            res.push(resultData[i].getValue().getString());
         }
         return res;
     }
