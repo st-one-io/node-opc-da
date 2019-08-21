@@ -62,7 +62,17 @@ class EnumString {
         callObject.addOutParamAsObject(strArrayValue, dcom.Flags.FLAG_NULL);
         callObject.addOutParamAsType(dcom.Types.INTEGER, dcom.Flags.FLAG_NULL);
 
-        let result = await this._comObj.call(callObject);
+        let resultObj = await this._comObj.call(callObject);
+
+        let hresult = resultObj.hresult;
+        let result = resultObj.getResults();
+        if (hresult != 0) {
+            if (result.lenght == 0)
+                throw new Error(String(hresult));
+            else 
+                console.log(new Error(String(hresult)));
+        }
+
         let resultData;
         if (result instanceof dcom.ComValue)
             resultData = result[0].getValue().getArrayInstance();
@@ -93,7 +103,10 @@ class EnumString {
 
         callObject.addInParamAsInt(num, dcom.Flags.FLAG_NULL);
 
-        await this._comObj.call(callObject);
+        await this._comObj.call(callObject)
+         .catch(function(reject) {
+            throw reject;
+          });
     }
 
     /**
@@ -107,7 +120,10 @@ class EnumString {
         let callObject = new dcom.CallBuilder(true);
         callObject.setOpnum(2);
 
-        await this._comObj.call(callObject);
+        await this._comObj.call(callObject)
+            .catch(function(reject) {
+                throw reject;
+            });
     }
 
     // ------
@@ -119,7 +135,10 @@ class EnumString {
         await this.reset();
         let part, res = [];
         do {
-            part = await this.next(this._batchSize);
+            part = await this.next(this._batchSize)
+                .catch(function(reject) {
+                    throw reject;
+                });
             res.push(...part);
         } while (part.length == this._batchSize);
 

@@ -61,6 +61,11 @@ class OPCServer {
         if (this._comObj) throw new Error("Already initialized");
 
         this._comObj = await unknown.queryInterface(constants.iid.IOPCServer_IID);
+
+        // now that we have the comObj, we can get the events emitted
+        this._comObj.on('disconnected', function(){
+            console.log("CONNECTION LOST");
+        });
     }
 
     async end() {
@@ -126,7 +131,16 @@ class OPCServer {
         callObject.addInParamAsUUID(constants.iid.IOPCGroupStateMgt_IID, Flags.FLAG_NULL);
         callObject.addOutParamAsType(Types.COMOBJECT, Flags.FLAG_NULL);
 
-        let result = await this._comObj.call(callObject);
+        let resultObj = await this._comObj.call(callObject);
+
+        let hresult = resultObj.hresult;
+        let result = resultObj.getResults();
+        if (hresult != 0) {
+            if (result.lenght == 0)
+                throw new Error(String(hresult));
+            else 
+                console.log(new Error(String(hresult)));
+        }
 
         let group = new OPCGroupStateManager();
         await group.init(result[2].getValue());
@@ -156,7 +170,16 @@ class OPCServer {
         callObject.addOutParamAsObject(outString, Flags.FLAG_NULL);
         //callObject.addOutParamAsObject(new Pointer(new ComString(Flags.FLAG_REPRESENTATION_STRING_LPWSTR)), Flags.FLAG_NULL);
 
-        let result = await this._comObj.call(callObject);
+        let resultObj = await this._comObj.call(callObject);
+
+        let hresult = resultObj.hresult;
+        let result = resultObj.getResults();
+        if (hresult != 0) {
+            if (result.lenght == 0)
+                throw new Error(String(hresult));
+            else 
+                console.log(new Error(String(hresult)));
+        }
 
         return result[0].getString();
         //return result[0].getReferent().getString();
@@ -178,7 +201,16 @@ class OPCServer {
         callObject.addInParamAsUUID(constants.iid.IOPCGroupStateMgt_IID, Flags.FLAG_NULL);
         callObject.addOutParamAsType(Types.COMOBJECT, Flags.FLAG_NULL);
 
-        let result = await this._comObj.call(callObject);
+        let resultObj = await this._comObj.call(callObject);
+
+        let hresult = resultObj.hresult;
+        let result = resultObj.getResults();
+        if (hresult != 0) {
+            if (result.lenght == 0)
+                throw new Error(String(hresult));
+            else 
+                console.log(new Error(String(hresult)));
+        }
 
         let group = new OPCGroupStateManager();
         await group.init(result[0]);
@@ -212,7 +244,16 @@ class OPCServer {
         callObject.setOpnum(3);
         callObject.addOutParamAsObject(new ComValue(statusStructPointer, Types.POINTER), Flags.FLAG_NULL);
 
-        let result = await this._comObj.call(callObject);
+        let resultObj = await this._comObj.call(callObject);
+
+        let hresult = resultObj.hresult;
+        let result = resultObj.getResults();
+        if (hresult != 0) {
+            if (result.lenght == 0)
+                throw new Error(String(hresult));
+            else 
+                console.log(new Error(String(hresult)));
+        }
 
         let resStruct = result[0].getValue().getReferent();
 
@@ -273,10 +314,19 @@ class OPCServer {
         callObject.addInParamAsUUID(constants.iid.IEnumString_IID, Flags.FLAG_NULL);
         callObject.addOutParamAsType(Types.COMOBJECT, Flags.FLAG_NULL);
 
-        let result = await this._comObj.call(callObject);
+        let resultObj = await this._comObj.call(callObject);
+
+        let hresult = resultObj.hresult;
+        let result = resultObj.getResults();
+        if (hresult != 0) {
+            if (result.lenght == 0)
+                throw new Error(String(hresult));
+            else 
+                console.log(new Error(String(hresult)));
+        }
 
         let enumStr = new EnumString();
-        await enumStr.init(result[0]);
+        await enumStr.init(result[0].getValue());
         let res = await enumStr.asArray();
         await enumStr.end();
         

@@ -68,8 +68,8 @@ function getStruct(){
  * @returns {FileTime}
  */
 function fromStruct(struct){
-    let lo = struct.getMember(0);
-    let hi = struct.getMember(1);
+    let lo = struct.getMember(0).getValue();
+    let hi = struct.getMember(1).getValue();
 
     return new FileTime(hi, lo);
 }

@@ -132,7 +132,16 @@ class OPCItemManager {
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     let results = result[0].getValue().getReferent().getArrayInstance();
     let errorCodes = result[1].getValue().getReferent().getArrayInstance();
@@ -181,7 +190,16 @@ class OPCItemManager {
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     let results = result[0].getValue().getReferent().getArrayInstance();
     let errorCodes = result[1].getValue().getReferent().getArrayInstance();
@@ -227,7 +245,16 @@ class OPCItemManager {
     let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     return result[0].getValue().getReferent().getArrayInstance();
   }
@@ -259,7 +286,16 @@ class OPCItemManager {
     let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     let errorCodes = result[0].getValue().getReferent().getArrayInstance();
     let results = new Array();
@@ -303,7 +339,16 @@ class OPCItemManager {
     let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     return result[0].getValue().getReferent().getArrayInstance();
   }

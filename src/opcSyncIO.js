@@ -27,6 +27,10 @@ class OPCSyncIO {
     if (this._comObj) throw new Error("Already initialized");
 
     this._comObj = await unknown.queryInterface(constants.iid.IOPCSyncIO_IID);
+
+    this._comObj.on('disconnected', function(){
+      console.log("CONNECTION LOST");
+  });
   }
 
   async end() {
@@ -74,7 +78,16 @@ class OPCSyncIO {
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     let results = result[0].getValue().getReferent().getArrayInstance();
     let errorCodes = result[1].getValue().getReferent().getArrayInstance();
@@ -87,8 +100,9 @@ class OPCSyncIO {
         timestamp: filetime.fromStruct(results[i].getValue().getMember(1).getValue()).getDate(),
         quality: results[i].getValue().getMember(2).getValue(),
         reserved: results[i].getValue().getMember(3).getValue(),
-        value: results[i].getValue().getMember(4).getValue().member.getValue().referent.obj.getValue(),
-        
+        value: (!results[i].getValue().getMember(4).getValue().member.getValue().referent.isArray) ? 
+          results[i].getValue().getMember(4).getValue().member.getValue().referent.obj.getValue() :
+          results[i].getValue().getMember(4).getValue().member.getValue().referent.getArray(0).memberArray,      
       };
       res.push(resObj);
     }
@@ -130,7 +144,16 @@ class OPCSyncIO {
     let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     return result[0].getReferent().getArrayInstance();
   }

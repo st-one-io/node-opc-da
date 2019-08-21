@@ -18,19 +18,29 @@ const {ComServer, Session, Clsid} = require('dcom');
 
 /**
  * 
- * @param {string} address
- * @param {string} domain 
- * @param {string} user 
- * @param {string} pass 
- * @param {string} clsid 
+ * @param {String} address
+ * @param {String} domain 
+ * @param {String} user 
+ * @param {String} pass 
+ * @param {String} clsid 
  * @param {object} [opts] 
  * @returns {Promise<{comServer:ComServer, opcServer:OPCServer}>}
  */
 async function createServer(address, domain, user, pass, clsid, opts) {
   let session = new Session();
   session = session.createSession(domain, user, pass);
+  session.setGlobalSocketTimeout(2000);
 
   let comServer = new ComServer(new Clsid(clsid), address, session);
+
+  comServer.on('disconnected', function(){
+    console.log("Disconnected from the server.");
+  })
+
+  comServer.on('connectiontimeout', function(){
+    console.log("Connection timeout.");
+  })
+
   await comServer.init();
 
   let comObject = await comServer.createInstance();

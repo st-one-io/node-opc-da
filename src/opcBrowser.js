@@ -26,6 +26,10 @@ class OPCBrowser {
     if (this._comObj) throw new Error("Already initialized");
 
     this._comObj = await unknown.queryInterface(constants.iid.IOPCBrowseServerAddressSpace_IID);
+
+    this._comObj.on('disconnected', function(){
+      console.log("CONNECTION LOST");
+  });
   }
 
   async end() {
@@ -49,7 +53,16 @@ class OPCBrowser {
 
     callObject.addOutParamAsType(Types.SHORT, Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
     return result[0];
   }
 
@@ -69,7 +82,16 @@ class OPCBrowser {
     callObject.addInParamAsShort(direction, Flags.FLAG_NULL);
     callObject.addInParamAsString(position, Flags.FLAG_REPRESENTATION_STRING_LPWSTR);
 
-    await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
   }
 
   /**
@@ -93,7 +115,16 @@ class OPCBrowser {
     callObject.addInParamAsInt(accessRights, Flags.FLAG_NULL);
     callObject.addOutParamAsType(Types.COMOBJECT, Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     let enumResults = new EnumString();
     await enumResults.init(result[0].getValue());
@@ -123,7 +154,16 @@ class OPCBrowser {
     callObject.addInParamAsString(item, Flags.FLAG_REPRESENTATION_STRING_LPWSTR );
     callObject.addOutParamAsObject(strPointerValue, Flags.FLAG_NULL);
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     let resultPtr = result[0].getValue();
     let resultPtrRef = resultPtr.getReferent();
@@ -146,7 +186,16 @@ class OPCBrowser {
     callObject.addInParamAsString(itemID, Flags.FLAG_REPRESENTATION_STRING_LPWSTR);
     callObject.addOutParamAsType (Types.COMOBJECT, Flags.FLAG_NULL );
 
-    let result = await this._comObj.call(callObject);
+    let resultObj = await this._comObj.call(callObject);
+
+    let hresult = resultObj.hresult;
+    let result = resultObj.getResults();
+    if (hresult != 0) {
+        if (result.lenght == 0)
+            throw new Error(String(hresult));
+        else 
+            console.log(new Error(String(hresult)));
+    }
 
     let enumResults = new EnumString();
     await enumResults.init(result[0]);
@@ -160,7 +209,10 @@ class OPCBrowser {
    */
   async browseAllFlat() {
     await this.changePosition(null, constants.opc.browse.direction.TO);
-    let enumItems = await this.browse(constants.opc.browse.type.FLAT);
+    let enumItems = await this.browse(constants.opc.browse.type.FLAT)
+      .catch(function(reject) {
+        throw reject;
+      });
     return await enumItems.asArray();
   }
 
@@ -177,7 +229,7 @@ class OPCBrowser {
    */
   async browseLevel() {
     let res = {}
-
+    console.log("BROWSING ALL BRANCHES AND LEAFS");
     // get items on this level
     let enumItems = await this.browse(constants.opc.browse.type.LEAF);
     let items = await enumItems.asArray();
@@ -191,7 +243,6 @@ class OPCBrowser {
       res[branch] = await this.browseLevel();
       await this.changePosition(null, constants.opc.browse.direction.UP);
     }
-
     return res;
   }
 }
