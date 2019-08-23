@@ -150,12 +150,12 @@ class OPCItemManager {
     for (let i = 0; i < items.length; i++) {
       let resObj = {
         itemID: items[i].itemID,
-        serverHandle: results[i].getValue().getMember(0),
-        cannonicalDataType: results[i].getValue().getMember(1),
-        reserved: results[i].getValue().getMember(2),
-        accessRights: results[i].getValue().getMember(3)
+        serverHandle: results[i].getValue().getMember(0).getValue(),
+        cannonicalDataType: results[i].getValue().getMember(1).getValue(),
+        reserved: results[i].getValue().getMember(2).getValue(),
+        accessRights: results[i].getValue().getMember(3).getValue()
       };
-      res.push([errorCodes[i], resObj]);
+      res.push([errorCodes[i].getValue(), resObj]);
     }
 
     return res;
