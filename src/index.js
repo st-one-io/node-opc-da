@@ -14,7 +14,8 @@ const OPCItemManager = require('./opcItemManager');
 const OPCItemProperties = require('./opcItemProperties');
 const OPCServer = require('./opcServer');
 const OPCSyncIO = require('./opcSyncIO');
-const {ComServer, Session, Clsid} = require('dcom');
+const dcom = require('dcom');
+const {ComServer, Session, Clsid} = dcom;
 
 /**
  * 
@@ -62,6 +63,8 @@ module.exports = {
   OPCItemProperties,
   OPCServer,
   OPCSyncIO,
+
+  dcom,
 
   createServer
 }
