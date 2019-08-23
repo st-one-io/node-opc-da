@@ -106,6 +106,8 @@ class OPCServer {
     async addGroup(name, opts) {
         if (!this._comObj) throw new Error("Not initialized");
 
+        opts = opts || {};
+
         let active = opts.active !== undefined ? opts.active : this._groupDef.active;
         let updateRate = !isNaN(opts.updateRate) ? opts.updateRate : this._groupDef.updateRate;
         let clientHandle = !isNaN(opts.clientHandle) ? opts.clientHandle : Math.trunc(Math.random() * 0xFFFFFFFF);
