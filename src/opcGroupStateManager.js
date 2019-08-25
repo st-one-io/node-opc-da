@@ -12,6 +12,20 @@ const { EventEmitter } = require('events');
 
 const { CallBuilder, ComString, ComValue, Flags, Pointer, types} = require('dcom');
 
+
+/**
+ * Group properties
+ * @typedef {object} GroupProperties
+ * @property {number} updateRate
+ * @property {boolean} active
+ * @property {number} timeBias
+ * @property {number} deadband
+ * @property {number} localeID
+ * @property {number} [clientHandle]
+ * @property {number} [serverHandle]
+ *
+ */
+
 /**
  * Represents an OPC Server
  * @emits data
@@ -57,7 +71,7 @@ class OPCGroupStateManager extends EventEmitter {
   }
 
   /**
-   * @returns {Promise<object>}
+   * @returns {Promise<{{name: string}, {state: GroupProperties}}>}
    * @opNum 0
    */
   async getState() {
@@ -80,42 +94,39 @@ class OPCGroupStateManager extends EventEmitter {
     let result = await this._comObj.call(callObject);
 
     return {
-      updateRate: result[0],
-      active: result[1],
       name: result[2].getReferent().getString(),
-      timeBias: result[3],
-      deadband: result[4],
-      localeID: result[5],
-      clientHandle: result[6],
-      serverHandle: result[7]
+      state: {
+        updateRate: result[0],
+        active: result[1],
+        timeBias: result[3],
+        deadband: result[4],
+        localeID: result[5],
+        clientHandle: result[6],
+        serverHandle: result[7]
+      }
     }
   }
 
   /**
    * 
-   * @param {number} updateRate 
-   * @param {boolean} active 
-   * @param {number} timeBias 
-   * @param {number} deadband 
-   * @param {number} localeID 
-   * @param {number} clientHandle
+   * @param {GroupProperties} state
    * @returns {Promise<number>} the granted update rate
    * @opNum 1
    */
-  async setState(updateRate, active, timeBias, deadband, localeID, clientHandle) {
+  async setState(state) {
     if (!this._comObj) throw new Error("Not initialized");
 
     let callObject = new CallBuilder(true);
     callObject.setOpnum(1);
 
-    let activeCV = active === null ? null : new ComValue(active ? 1 : 0, types.INTEGER);
+    let activeCV = state.active === null ? null : new ComValue(state.active ? 1 : 0, types.INTEGER);
 
-    callObject.addInParamAsPointer(new Pointer(new ComValue(updateRate, types.INTEGER)), Flags.FLAG_NULL);
+    callObject.addInParamAsPointer(new Pointer(new ComValue(state.updateRate, types.INTEGER)), Flags.FLAG_NULL);
     callObject.addInParamAsPointer(new Pointer(activeCV), Flags.FLAG_NULL);
-    callObject.addInParamAsPointer(new Pointer(new ComValue(timeBias, types.INTEGER)), Flags.FLAG_NULL);
-    callObject.addInParamAsPointer(new Pointer(new ComValue(deadband, types.FLOAT)), Flags.FLAG_NULL);
-    callObject.addInParamAsPointer(new Pointer(new ComValue(localeID, types.INTEGER)), Flags.FLAG_NULL);
-    callObject.addInParamAsPointer(new Pointer(new ComValue(clientHandle, types.INTEGER)), Flags.FLAG_NULL);
+    callObject.addInParamAsPointer(new Pointer(new ComValue(state.timeBias, types.INTEGER)), Flags.FLAG_NULL);
+    callObject.addInParamAsPointer(new Pointer(new ComValue(state.deadband, types.FLOAT)), Flags.FLAG_NULL);
+    callObject.addInParamAsPointer(new Pointer(new ComValue(state.localeID, types.INTEGER)), Flags.FLAG_NULL);
+    callObject.addInParamAsPointer(new Pointer(new ComValue(state.clientHandle, types.INTEGER)), Flags.FLAG_NULL);
 
     callObject.addOutParamAsType(types.INTEGER, Flags.FLAG_NULL);
 
