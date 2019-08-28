@@ -114,5 +114,3 @@ module.exports = {
     OPCITEMDEF,
     OPCNAMESPACETYPEfromID
 }
-
-
