@@ -5,8 +5,9 @@
 */
 
 const constants = require('./constants.js');
-
 const dcom = require('dcom');
+const util = require('util');
+const debug = util.debuglog('opc-da');
 
 /**
  * Represents an EnumString
@@ -29,17 +30,22 @@ class EnumString {
      * @returns {Promise<?>}
      */
     async init(unknown) {
+        debug("Initing EnumString...");
         if (this._comObj) throw new Error("Already initialized");
 
         this._comObj = await unknown.queryInterface(constants.iid.IEnumString_IID);
+        debug("EnumString successfully inited.");
     }
 
-    async end() {
+    async end(hresult) {
+        debug("Destroying EnumString...");
         if (!this._comObj) return;
 
         let obj = this._comObj;
+        debug(String(new Error(String(hresult))));
         this._comObj = null;
         await obj.release();
+        debug("EnumString successfully destroyed.");
     }
 
     /**
@@ -49,6 +55,7 @@ class EnumString {
      * @opNum 0
      */
     async next(num) {
+        debug("Querying the server for a batch of  " + num + " items...");
         if (!this._comObj) throw new Error("Not initialized");
 
         if (num <= 0) return [];
@@ -70,7 +77,7 @@ class EnumString {
             if (result.lenght == 0)
                 throw new Error(String(hresult));
             else 
-                console.log(new Error(String(hresult)));
+                debug("No more items.");
         }
 
         let resultData;
@@ -84,6 +91,7 @@ class EnumString {
         for (let i = 0; i < count; i++) {
             res.push(resultData[i].getValue().getString());
         }
+        debug("Items successfullly obtained.");
         return res;
     }
 
@@ -115,6 +123,7 @@ class EnumString {
      * @opnum 2
      */
     async reset() {
+        debug("Reseting EnumString...");
         if (!this._comObj) throw new Error("Not initialized");
 
         let callObject = new dcom.CallBuilder(true);
@@ -124,6 +133,7 @@ class EnumString {
             .catch(function(reject) {
                 throw reject;
             });
+        debug("EnumString successfully reseted.");
     }
 
     // ------
@@ -132,6 +142,7 @@ class EnumString {
      * @returns {Promise<string[]>}
      */
     async asArray(){
+        debug("Creating an Array for the current EnumString...");
         await this.reset();
         let part, res = [];
         do {
@@ -142,6 +153,7 @@ class EnumString {
             res.push(...part);
         } while (part.length == this._batchSize);
 
+        debug("Array of EnumString itens sucessfully created.");
         return res;
     }
 }

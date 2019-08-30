@@ -7,6 +7,8 @@
 const constants = require('./constants.js');
 const {CallBuilder, ComString, ComValue, Types, Pointer, Flags} = require('dcom');
 const EnumString = require('./enumString');
+const util = require('util');
+const debug = util.debuglog('opc-da');
 
 /**
  * Represents an OPC Browser
@@ -23,21 +25,26 @@ class OPCBrowser {
    * @returns {Promise<?>}
    */
   async init(unknown) {
+    debug("Initing OPCBrowser...");
     if (this._comObj) throw new Error("Already initialized");
 
     this._comObj = await unknown.queryInterface(constants.iid.IOPCBrowseServerAddressSpace_IID);
 
     this._comObj.on('disconnected', function(){
       console.log("CONNECTION LOST");
-  });
+    });
+
+    debug("OPCBrowser successfully created.");
   }
 
   async end() {
+    debug("Destroying OPCBrowser...");
     if (!this._comObj) return;
 
     let obj = this._comObj;
     this._comObj = null;
     await obj.release();
+    debug("OPCBrowser successfully destroyed.");
   }
 
   /**
@@ -46,6 +53,7 @@ class OPCBrowser {
    * @opNum 0
    */
   async queryOrganization() {
+    debug("Querying OPCServer for items organization...");
     if (!this._comObj) throw new Error("Not initialized");
 
     let callObject = new CallBuilder(true);
@@ -61,8 +69,9 @@ class OPCBrowser {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debug(String(new Error(String(hresult))));
     }
+    debug("Item organization obtained.");
     return result[0];
   }
 
@@ -74,6 +83,7 @@ class OPCBrowser {
    * @opNum 1
    */
   async changePosition(position, direction) {
+    debug("Changing browsing position to " + direction);
     if (!this._comObj) throw new Error("Not initialized");
 
     let callObject = new CallBuilder(true);
@@ -88,10 +98,21 @@ class OPCBrowser {
     let result = resultObj.getResults();
     if (hresult != 0) {
         if (result.lenght == 0)
-            throw new Error(String(hresult));
-        else 
-            console.log(new Error(String(hresult)));
+          throw new Error(String(hresult));
+        else { 
+          if (hresult == 1) {
+            if (direction == constants.opc.browse.direction.TO)
+              debug("Already on top directory.");
+            else if (direction == constants.opc.browse.direction.DOWN)
+              debug("There is not directory to go down to.");
+            else if (direction == constants.opc.browse.direction.UP)
+              debug("There is not directory to go up to. Already on top directory");
+          } else if (hresult == 0x80004001) {
+              debug ("Browsing is not implemented by the server");
+          }
+        }
     }
+    debug("Browsing position successfully changed.");
   }
 
   /**
@@ -104,6 +125,7 @@ class OPCBrowser {
    * @opNum 2
    */
   async browse(type, filter, accessRights, dataType) {
+    debug("Browsing OPCServer with type: " + type + " filter: " + filter + " accessRights: " + accessRights + " dataType: " + dataType + "...");
     if (!this._comObj) throw new Error("Not initialized");
 
     let callObject = new CallBuilder(true);
@@ -121,13 +143,22 @@ class OPCBrowser {
     let result = resultObj.getResults();
     if (hresult != 0) {
         if (result.lenght == 0)
-            throw new Error(String(hresult));
-        else 
-            console.log(new Error(String(hresult)));
+          throw new Error(String(hresult));
+        else {
+          if (hresult == 1) { 
+            if (type == constants.opc.browse.type.LEAF)
+              debug("No more leafs found for the current level.");
+            else if (type = constants.opc.browse.type.BRANCH)
+              debug("No more branches found for the current level.")
+          } else if (hresult == 0x80004001) {
+              debug("Browsing is not implemented by the server");
+          }
+        }
     }
 
     let enumResults = new EnumString();
     await enumResults.init(result[0].getValue());
+    debug("Browsing request successfully executed.");
     return enumResults;
   }
 
@@ -144,6 +175,7 @@ class OPCBrowser {
    * @opNum 3
    */
   async getItemID(item) {
+    debug("Querying OPCServer for itemID: " + item + "...");
     if (!this._comObj) throw new Error("Not initialized");
 
     let callObject = new CallBuilder(true);
@@ -167,6 +199,7 @@ class OPCBrowser {
 
     let resultPtr = result[0].getValue();
     let resultPtrRef = resultPtr.getReferent();
+    debug("Item request successfully executed.");
     return resultPtrRef.getString();
   }
 
@@ -178,6 +211,7 @@ class OPCBrowser {
    * @opNum 4
    */
   async browseAccessPaths(itemID) {
+    debug("Querying OPCServer for browseAcessPaths for the item " + itemID + "...");
     if (!this._comObj) throw new Error("Not initialized");
 
     let callObject = new CallBuilder(true);
@@ -199,6 +233,7 @@ class OPCBrowser {
 
     let enumResults = new EnumString();
     await enumResults.init(result[0]);
+    debug("Item browseAccessPaths successfully obtained.");
     return enumResults;
   }
 
@@ -208,12 +243,16 @@ class OPCBrowser {
    * @returns {Promise<Array<string>>} an array with all items in a flat address space
    */
   async browseAllFlat() {
+    debug("Browsing OPCServer on Flat mode...");
     await this.changePosition(null, constants.opc.browse.direction.TO);
     let enumItems = await this.browse(constants.opc.browse.type.FLAT)
       .catch(function(reject) {
         throw reject;
       });
-    return await enumItems.asArray();
+    
+    let result =  await enumItems.asArray();
+    debug("Successfully browsed OPCServer and obtained " + result.length + " items.");
+    return result;
   }
 
   /**
@@ -229,7 +268,7 @@ class OPCBrowser {
    */
   async browseLevel() {
     let res = {}
-    console.log("BROWSING ALL BRANCHES AND LEAFS");
+   
     // get items on this level
     let enumItems = await this.browse(constants.opc.browse.type.LEAF);
     let items = await enumItems.asArray();

@@ -5,6 +5,8 @@
 */
 
 const constants = require('./constants.js');
+const util = require('util');
+const debug = util.debuglog('opc-da');
 
 const { CallBuilder, ComArray, ComString, ComValue, Flags, Pointer, Struct, Variant, Types } = require('dcom');
 
@@ -90,20 +92,24 @@ class OPCItemManager {
    * @returns {Promise<void>}
    */
   async init(unknown) {
+    debug("Initing ItemManager...");
     if (this._comObj) throw new Error("Already initialized");
 
     this._comObj = await unknown.queryInterface(constants.iid.IOPCItemMgt_IID);
+    debug("ItemManager successfully initted");
   }
 
   /**
    * @returns {Promise<void>}
    */
   async end() {
+    debug("Destroyin ItemManager...");
     if (!this._comObj) return;
 
     let obj = this._comObj;
     this._comObj = null;
     await obj.release();
+    debug("ItemManager successfully destroyed.");
   }
 
   /**
@@ -113,6 +119,10 @@ class OPCItemManager {
    * @opNum 0
    */
   async add(items) {
+    debug("Adding " + items.length + " to the current group: ");
+    for (let i = 0; i < items.length; i++)
+      debug(items[i].itemID);
+
     if (!this._comObj) throw new Error("Not initialized");
 
     if (!(items.length > 0)) return [];
@@ -149,6 +159,7 @@ class OPCItemManager {
     let errorCodes = result[1].getValue().getReferent().getArrayInstance();
 
     let res = [];
+    let failed = [];
     for (let i = 0; i < items.length; i++) {
       let resObj = {
         itemID: items[i].itemID,
@@ -156,10 +167,18 @@ class OPCItemManager {
         cannonicalDataType: results[i].getValue().getMember(1).getValue(),
         reserved: results[i].getValue().getMember(2).getValue(),
         accessRights: results[i].getValue().getMember(3).getValue()
+
       };
       res.push([errorCodes[i].getValue(), resObj]);
+      if (errorCodes[i].getValue() != 0)
+        failed.push([errorCodes[i].getValue(), resObj.itemID]);
     }
-
+    debug("A total of " + (res.length - failed.length) + " items were successfully added to the group.");
+    if (failed.length > 0) {
+      debug("The following items were not added: ");
+      for (let i = 0; i < failed.length; i++)
+        debug("Item: " + failed[i][0] + " ErrorCode: " + failed[i][1]);
+    }
     return res;
   }
 
@@ -170,6 +189,10 @@ class OPCItemManager {
    * @opNum 1
    */
   async validate(items) {
+    debug("Querying server to validade " + items.length + " items: ");
+    for (let i = 0; i < items.length; i++)
+      debug(items[i].itemID);
+    
     if (!this._comObj) throw new Error("Not initialized");
 
     if (!(items.length > 0)) return [];
@@ -207,6 +230,7 @@ class OPCItemManager {
     let errorCodes = result[1].getValue().getReferent().getArrayInstance();
 
     let res = [];
+    let failed = []
     for (let i = 0; i < items.length; i++) {
       let resObj = {
         itemID: items[i].itemID,
@@ -216,8 +240,16 @@ class OPCItemManager {
         accessRights: results[i].getValue().getMember(3)
       };
       res.push([errorCodes[i], resObj]);
+      if (errorCodes[i].getValue() != 0) {
+        failed.push([errorCodes[i].getValue(), resObj.itemID])
+      }
     }
-
+    debug("A total of " + res.length + " were successfully validated.");
+    if (failed.length > 0) {
+      debug("The following items were not added: ");
+      for (let i = 0; i < failed.length; i++)
+        debug("Item: " + failed[i][0] + " ErrorCode: " + failed[i][1]);
+    }
     return res;
   }
 
@@ -228,6 +260,9 @@ class OPCItemManager {
    * @opNum 2
    */
   async remove(items) {
+    debug("Removing " + items.length + "items: ");
+    for (let i = 0; i < items.length; i++) 
+      debug(String(items[i]));
     if (!this._comObj) throw new Error("Not initialized");
 
     if (!(items.length > 0)) return [];
@@ -257,7 +292,7 @@ class OPCItemManager {
         else 
             console.log(new Error(String(hresult)));
     }
-
+    debug("Items successfully removed.");
     return result[0].getValue().getReferent().getArrayInstance();
   }
 
@@ -269,6 +304,7 @@ class OPCItemManager {
    * @opNum 3
    */
   async setActiveState(state, items) {
+    
     if (!this._comObj) throw new Error("Not initialized");
 
     if (!(items.length > 0)) return [];

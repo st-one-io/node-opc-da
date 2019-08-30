@@ -12,7 +12,9 @@ const OPCItemIO = require('./opcItemIO.js');
 const OPCItemProperties = require('./opcItemProperties');
 const OPCGroupStateManager = require('./opcGroupStateManager');
 const filetime = require('./filetime');
-
+const util = require('util');
+const debug = util.debuglog('opca-da');
+const events = require('events');
 const { CallBuilder, ComString, ComValue, Flags, Pointer, Struct, Types } = require('dcom');
 
 const groupCache = new WeakMap();
@@ -39,7 +41,7 @@ const groupCache = new WeakMap();
 /**
  * Represents an OPC Server
  */
-class OPCServer {
+class OPCServer extends events.EventEmitter {
 
     /**
      * 
@@ -52,7 +54,9 @@ class OPCServer {
      * @param {number} [opts.defaultLocale=1033]
      */
     constructor(opts) {
+        debug("Creating OPCServer...");
         //TODO - default values for addGroup
+        super();
         opts = opts || {};
         this._defaultLocale = opts.defaultLocale || 1033;
 
@@ -77,20 +81,24 @@ class OPCServer {
      * @returns {Promise<void>}
      */
     async init(unknown) {
+        debug("Initing OPCServer...")
         if (this._comObj) throw new Error("Already initialized");
 
         this._comObj = await unknown.queryInterface(constants.iid.IOPCServer_IID);
 
         // now that we have the comObj, we can get the events emitted
         this._comObj.on('disconnected', function(){
+            this.emit('disconnected');
             console.log("CONNECTION LOST");
         });
+        debug("OPCServer inited successfully");
     }
 
     /**
      * @returns {Promise<void>}
      */
     async end() {
+        debug("Ending OPCServer...")
         if (!this._comObj) return;
 
         let obj = this._comObj;
@@ -110,6 +118,7 @@ class OPCServer {
         if (opcItemIO) await opcItemIO.end();
         if (opcItemProperties) await opcItemProperties.end();
         await obj.release();
+        debug("OPCServer successfully ended.");
     }
 
     /**
@@ -120,6 +129,7 @@ class OPCServer {
      * @opNum 0
      */
     async addGroup(name, opts) {
+        debug("Adding new group \"" + name + "\"...");
         if (!this._comObj) throw new Error("Not initialized");
 
         opts = opts || {
@@ -163,13 +173,17 @@ class OPCServer {
         if (hresult != 0) {
             if (result.lenght == 0)
                 throw new Error(String(hresult));
-            else 
-                console.log(new Error(String(hresult)));
+            else {
+                if (hresult == 0x0004000D) {
+                    this.emit('opc_s_unsuportedrate');
+                }
+            }
         }
 
         let group = new OPCGroupStateManager();
         await group.init(result[2].getValue());
         groupCache.set(group, clientHandle);
+        debug(name + " added successfully.");
         return group;
     }
 
@@ -217,6 +231,7 @@ class OPCServer {
      * @opNum 2
      */
     async getGroupByName(name) {
+        debug("Getting group \"" + name + "\"...");
         if (!this._comObj) throw new Error("Not initialized");
 
         let callObject = new CallBuilder(true);
@@ -239,6 +254,7 @@ class OPCServer {
 
         let group = new OPCGroupStateManager();
         await group.init(result[0]);
+        debug("Successfully get request for group \"" + name +"\".");
         return group;
     }
 
@@ -247,6 +263,7 @@ class OPCServer {
      * @opNum 3
      */
     async getStatus() {
+        debug("Querying server for status information..");
         if (!this._comObj) throw new Error("Not initialized");
 
         let statusStruct = new Struct();
@@ -282,6 +299,7 @@ class OPCServer {
 
         let resStruct = result[0].getValue().getReferent();
 
+        debug("Server Status information obtained.");
         return {
             startTime: filetime.fromStruct(resStruct.getMember(0).getValue()).getDate(),
             currentTime: filetime.fromStruct(resStruct.getMember(1).getValue()).getDate(),
@@ -305,6 +323,7 @@ class OPCServer {
      * @opNum 4
      */
     async removeGroup(handle, force) {
+        debug("Removing group \"" + name + "\"...");
         if (!this._comObj) throw new Error("Not initialized");
 
         if (handle instanceof OPCGroupStateManager) {
@@ -321,6 +340,7 @@ class OPCServer {
         callObject.addInParamAsInt(force ? 1 : 0, Flags.FLAG_NULL);
 
         await this._comObj.call(callObject);
+        debug("Group \"" + name + "\" successfully removed.");
     }
 
     /**
@@ -330,6 +350,7 @@ class OPCServer {
      * @opNum 5
      */
     async getGroups(scope) {
+        debug("Querying OPCServer for a list of available groups...");
         if (!this._comObj) throw new Error("Not initialized");
 
         let callObject = new CallBuilder(true);
@@ -347,14 +368,14 @@ class OPCServer {
             if (result.lenght == 0)
                 throw new Error(String(hresult));
             else 
-                console.log(new Error(String(hresult)));
+                debug("No groups were found");
         }
 
         let enumStr = new EnumString();
         await enumStr.init(result[0].getValue());
         let res = await enumStr.asArray();
-        await enumStr.end();
-        
+        await enumStr.end(hresult);
+        debug("Group list successfully obtained.");
         return res;
     }
 
@@ -378,6 +399,7 @@ class OPCServer {
      * @returns {Promise<OPCBrowser>} an OPCBrowser instance of this server
      */
     async getBrowser() {
+        debug("Creating a browser instance...");
         if (!this._comObj) throw new Error("Not initialized");
 
         if (!this._opcBrowser) {
@@ -385,6 +407,7 @@ class OPCServer {
             await opcBrowser.init(this._comObj);
             this._opcBrowser = opcBrowser;
         }
+        debug("Browser instance succesfully created.");
         return this._opcBrowser;
     }
 
@@ -392,6 +415,7 @@ class OPCServer {
      * @returns {Promise<OPCItemIO>} an OPCBrowser insance of this server
      */
     async getItemIO() {
+        debug("Creating an ItemIO instance...");
         if (!this._comObj) throw new Error("Not initialized");
 
         if (!this._opcItemIO) {
@@ -399,6 +423,7 @@ class OPCServer {
             await opcItemIO.init(this._comObj);
             this._opcItemIO = opcItemIO;
         }
+        debug("ItemIO instance successfully created.");
         return this._opcItemIO;
     }
 
