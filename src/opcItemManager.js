@@ -9,37 +9,42 @@ const constants = require('./constants.js');
 const { CallBuilder, ComArray, ComString, ComValue, Flags, Pointer, Struct, Variant, Types } = require('dcom');
 
 /**
+ * @typedef {object} ItemStruct
+ * @property {string} itemID
+ * @property {number} clientHandle
+ * @property {string} [accessPath]
+ * @property {boolean} [active]
+ * @property {number} [requestedDataType]
+ * @property {number} [reserved]
+ */
+
+/**
+ * @typedef {object} ItemResponse
+ * @property {string} itemID
+ * @property {number} serverHandle
+ * @property {number} cannonicalDataType
+ * @property {number} reserved
+ * @property {number} accessRights
+ */
+
+/**
  * 
- * @param {object} item //TODO can be also a string
- * @param {string} item.itemID
- * @param {number} item.clientHandle
- * @param {string} [item.accessPath]
- * @param {boolean} [item.active]
- * @param {number} [item.requestedDataType]
- * @param {number} [item.reserved]
+ * @param {ItemStruct} item
  * @returns {Struct}
  */
 function getItemDefStruct(item) {
 
   let itemID, clientHandle, accessPath, active, requestedDataType, reserved;
-  if (typeof item === 'string') {
-    itemID = item;
-    clientHandle = Math.random() * 0xffffffff;
-    accessPath = '';
-    active = true;
-    requestedDataType = 0; //VT_EMPTY
-    reserved = 0;
-  } else {
-    if (item.itemID === null || item.itemID === undefined) {
-      throw new Error("Missing required itemID")
-    }
-    itemID = item.itemID;
-    clientHandle = item.clientHandle || Math.random() * 0xffffffff;
-    accessPath = item.accessPath || '';
-    active = item.active !== undefined ? item.active : true;
-    requestedDataType = item.requestedDataType || 0;
-    reserved = item.reserved || 0;
+
+  if (item.itemID === null || item.itemID === undefined) {
+    throw new Error("Missing required itemID")
   }
+  itemID = item.itemID;
+  clientHandle = item.clientHandle || Math.random() * 0xffffffff;
+  accessPath = item.accessPath || '';
+  active = item.active !== undefined ? item.active : true;
+  requestedDataType = item.requestedDataType || 0;
+  reserved = item.reserved || 0;
 
   let struct = new Struct();
   struct.addMember(new ComValue(new ComString(accessPath, Flags.FLAG_REPRESENTATION_STRING_LPWSTR), Types.COMSTRING));
@@ -82,7 +87,7 @@ class OPCItemManager {
   /**
    *
    * @param {*} unknown
-   * @returns {Promise<?>}
+   * @returns {Promise<void>}
    */
   async init(unknown) {
     if (this._comObj) throw new Error("Already initialized");
@@ -90,6 +95,9 @@ class OPCItemManager {
     this._comObj = await unknown.queryInterface(constants.iid.IOPCItemMgt_IID);
   }
 
+  /**
+   * @returns {Promise<void>}
+   */
   async end() {
     if (!this._comObj) return;
 
@@ -100,14 +108,8 @@ class OPCItemManager {
 
   /**
    * 
-   * @param {object[]} items 
-   * @param {string} items[].itemID
-   * @param {number} items[].clientHandle
-   * @param {string} [items[].accessPath]
-   * @param {boolean} [items[].active]
-   * @param {number} [items[].requestedDataType]
-   * @param {number} [items[].reserved]
-   * @returns {Promise<Array<object>>}
+   * @param {Array<ItemStruct>} items
+   * @returns {Promise<Array<Array<number,ItemResponse>>>}
    * @opNum 0
    */
   async add(items) {
@@ -150,12 +152,12 @@ class OPCItemManager {
     for (let i = 0; i < items.length; i++) {
       let resObj = {
         itemID: items[i].itemID,
-        serverHandle: results[i].getValue().getMember(0),
-        cannonicalDataType: results[i].getValue().getMember(1),
-        reserved: results[i].getValue().getMember(2),
-        accessRights: results[i].getValue().getMember(3)
+        serverHandle: results[i].getValue().getMember(0).getValue(),
+        cannonicalDataType: results[i].getValue().getMember(1).getValue(),
+        reserved: results[i].getValue().getMember(2).getValue(),
+        accessRights: results[i].getValue().getMember(3).getValue()
       };
-      res.push([errorCodes[i], resObj]);
+      res.push([errorCodes[i].getValue(), resObj]);
     }
 
     return res;
@@ -163,8 +165,8 @@ class OPCItemManager {
 
   /**
    * 
-   * @param {Array<string|object>} items
-   * @returns {Promise<Array<object>>}
+   * @param {Array<ItemStruct>} items
+   * @returns {Promise<Array<Array<number,ItemResponse>>>}
    * @opNum 1
    */
   async validate(items) {

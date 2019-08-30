@@ -18,6 +18,25 @@ const { CallBuilder, ComString, ComValue, Flags, Pointer, Struct, Types } = requ
 const groupCache = new WeakMap();
 
 /**
+ * @typedef {import('./opcGroupStateManager').GroupProperties} GroupProperties
+ */
+
+ /**
+  * @typedef {object} GroupStatus
+  * @property {Date} startTime
+  * @property {Date} currentTime
+  * @property {Date} lastUpdateTime
+  * @property {number} serverState
+  * @property {number} groupCount
+  * @property {number} bandWidth
+  * @property {number} majorVersion
+  * @property {number} minorVersion
+  * @property {number} buildNumber
+  * @property {number} reserved
+  * @property {string} vendorInfo
+  */
+
+/**
  * Represents an OPC Server
  */
 class OPCServer {
@@ -55,7 +74,7 @@ class OPCServer {
     /**
      *
      * @param {*} unknown
-     * @returns {Promise<?>}
+     * @returns {Promise<void>}
      */
     async init(unknown) {
         if (this._comObj) throw new Error("Already initialized");
@@ -68,6 +87,9 @@ class OPCServer {
         });
     }
 
+    /**
+     * @returns {Promise<void>}
+     */
     async end() {
         if (!this._comObj) return;
 
@@ -93,18 +115,21 @@ class OPCServer {
     /**
      * 
      * @param {String} name the group name
-     * @param {object} [opts]
-     * @param {boolean} [opts.active=true]
-     * @param {number} [opts.updateRate]
-     * @param {number} [opts.clientHandle]
-     * @param {number} [opts.timeBias]
-     * @param {number} [opts.deadband]
-     * @param {number} [opts.localeID]
+     * @param {GroupProperties} [opts]
      * @returns {Promise<?>}
      * @opNum 0
      */
     async addGroup(name, opts) {
         if (!this._comObj) throw new Error("Not initialized");
+
+        opts = opts || {
+            active: this._groupDef.active,
+            updateRate: this._groupDef.updateRate,
+            clientHandle: Math.trunc(Math.random() * 0xFFFFFFFF),
+            timeBias: this._groupDef.timeBias,
+            deadband: this._groupDef.deadband,
+            localeID: this._defaultLocale
+        };
 
         let active = opts.active !== undefined ? opts.active : this._groupDef.active;
         let updateRate = !isNaN(opts.updateRate) ? opts.updateRate : this._groupDef.updateRate;
@@ -188,7 +213,7 @@ class OPCServer {
     /**
      * 
      * @param {string} name
-     * @returns {Promise<?>}
+     * @returns {Promise<OPCGroupStateManager>}
      * @opNum 2
      */
     async getGroupByName(name) {
@@ -218,7 +243,7 @@ class OPCServer {
     }
 
     /**
-     * @returns {Promise<?>} the server status
+     * @returns {Promise<GroupStatus>} the server status
      * @opNum 3
      */
     async getStatus() {
