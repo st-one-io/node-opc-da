@@ -6,6 +6,8 @@
 
 const constants = require('./constants.js');
 const filetime = require('./filetime');
+const util = require('util');
+const debug = util.debuglog('opc-da');
 
 const { CallBuilder, ComArray, ComValue, Flags, Pointer, Struct, Variant, Types } = require('dcom');
 
@@ -24,21 +26,25 @@ class OPCSyncIO {
    * @returns {Promise<?>}
    */
   async init(unknown) {
+    debug("Initing OPCSyncIO...");
     if (this._comObj) throw new Error("Already initialized");
 
     this._comObj = await unknown.queryInterface(constants.iid.IOPCSyncIO_IID);
 
     this._comObj.on('disconnected', function(){
       console.log("CONNECTION LOST");
-  });
+    });
+    debug("OPCSyncIO successfully initted.");
   }
 
   async end() {
+    debug("Destroying OPCSyncIO...");
     if (!this._comObj) return;
 
     let obj = this._comObj;
     this._comObj = null;
     await obj.release();
+    debug("OPCSyncIO successfully destroyed.");
   }
 
   /**
@@ -49,6 +55,11 @@ class OPCSyncIO {
    * @opNum 0
    */
   async read(source, handles) {
+    debug("Reading " + handles.length + " items from " + source + ":");
+    for (let i = 0; i < handles.length; i++) {
+      debug("Item Handle: " + handles[i]);
+    }
+
     if (!this._comObj) throw new Error("Not initialized");
 
     if (!(handles.length > 0)) return [];
@@ -86,13 +97,14 @@ class OPCSyncIO {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            throw new Error(String(hresult));
     }
 
     let results = result[0].getValue().getReferent().getArrayInstance();
     let errorCodes = result[1].getValue().getReferent().getArrayInstance();
 
     let res = [];
+    let failed = [];
     for (let i = 0; i < handles.length; i++) {
       let resObj = {
         errorCode: errorCodes[i].getValue(),
@@ -105,8 +117,18 @@ class OPCSyncIO {
           results[i].getValue().getMember(4).getValue().member.getValue().referent.getArray(0).memberArray,      
       };
       res.push(resObj);
+      if (errorCodes[i].getValue() != 0) {
+        failed.push([resObj.clientHandle, resObj.errorCode]);
+      }
     }
-
+    
+    debug("Successfully read " + (res.length - failed.length) + " items.");
+    if (failed.length > 0) {
+      debug("The following items were not added: ");
+      for (let i = 0; i < failed.length; i++) {
+        debug("Item: " + failed[i][0] + " ErrorCode: " + failed[i][1]);
+      }
+    }
     return res;
   }
 

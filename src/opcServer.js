@@ -84,6 +84,8 @@ class OPCServer extends events.EventEmitter {
         debug("Initing OPCServer...")
         if (this._comObj) throw new Error("Already initialized");
 
+        if (!unknown) throw new Error("OPCServer init failed. No COM Server given.");
+
         this._comObj = await unknown.queryInterface(constants.iid.IOPCServer_IID);
 
         // now that we have the comObj, we can get the events emitted

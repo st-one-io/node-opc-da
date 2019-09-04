@@ -223,7 +223,7 @@ class OPCItemManager {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debug(new Error(String(hresult)));
     }
 
     let results = result[0].getValue().getReferent().getArrayInstance();
@@ -237,7 +237,8 @@ class OPCItemManager {
         serverHandle: results[i].getValue().getMember(0),
         cannonicalDataType: results[i].getValue().getMember(1),
         reserved: results[i].getValue().getMember(2),
-        accessRights: results[i].getValue().getMember(3)
+        accessRights: results[i].getValue().getMember(3),
+        errorCode: errorCodes[i].getValue()
       };
       res.push([errorCodes[i], resObj]);
       if (errorCodes[i].getValue() != 0) {
@@ -304,7 +305,10 @@ class OPCItemManager {
    * @opNum 3
    */
   async setActiveState(state, items) {
-    
+    debug("Changing the active state of " + items.length + "items: ");
+    for (let i = 0; i < items.length; i++) 
+      debug(String(items[i]), state[i]);
+
     if (!this._comObj) throw new Error("Not initialized");
 
     if (!(items.length > 0)) return [];
@@ -337,8 +341,19 @@ class OPCItemManager {
 
     let errorCodes = result[0].getValue().getReferent().getArrayInstance();
     let results = new Array();
+    let failed = new Array();
     for (let i = 0; i < items.length; i++) {
         results.push({value: items[i], errorCode: errorCodes[i]});
+        if (errorCodes[i].getValue() != 0) {
+          failed.push([errorCodes[i].getValue(), items[i]]);
+        }
+    }
+
+    debug("A total of " + (results.length - failed.length) + " had their active status setted to " + state + ".");
+    if (failed.length > 0) {
+      debug("The following items were not added: ");
+      for (let i = 0; i < failed.length; i++)
+        debug("Item: " + failed[i][0] + " ErrorCode: " + failed[i][1]);
     }
     return results;
   }
@@ -351,6 +366,10 @@ class OPCItemManager {
    * @opNum 4
    */
   async setClientHandles(items, handles) {
+    debug("Setting the handle of " + items.length + "items: ");
+    for (let i = 0; i < items.length; i++) 
+      debug(String(items[i]), handles[i]);
+
     if (!this._comObj) throw new Error("Not initialized");
 
     if (items.length !== handles.length) throw new Error("Array sizes must be the same");
@@ -388,6 +407,7 @@ class OPCItemManager {
             console.log(new Error(String(hresult)));
     }
 
+    debug("Clients handles setted.");
     return result[0].getValue().getReferent().getArrayInstance();
   }
 }

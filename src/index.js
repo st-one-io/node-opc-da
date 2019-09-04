@@ -15,6 +15,7 @@ const OPCItemProperties = require('./opcItemProperties');
 const OPCServer = require('./opcServer');
 const OPCSyncIO = require('./opcSyncIO');
 const dcom = require('dcom');
+const EventEmitter = require('events').EventEmitter;
 const {ComServer, Session, Clsid} = dcom;
 
 /**
@@ -28,19 +29,12 @@ const {ComServer, Session, Clsid} = dcom;
  * @returns {Promise<{comServer:ComServer, opcServer:OPCServer}>}
  */
 async function createServer(address, domain, user, pass, clsid, opts) {
+  EventEmitter.call(this);
   let session = new Session();
   session = session.createSession(domain, user, pass);
   session.setGlobalSocketTimeout(2000);
 
   let comServer = new ComServer(new Clsid(clsid), address, session);
-
-  comServer.on('disconnected', function(){
-    console.log("Disconnected from the server.");
-  })
-
-  comServer.on('connectiontimeout', function(){
-    console.log("Connection timeout.");
-  })
 
   await comServer.init();
 
@@ -63,8 +57,6 @@ module.exports = {
   OPCItemProperties,
   OPCServer,
   OPCSyncIO,
-
   dcom,
-
   createServer
 }
