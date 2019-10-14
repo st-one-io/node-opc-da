@@ -32,12 +32,12 @@ async function createServer(address, domain, user, pass, clsid, opts) {
   EventEmitter.call(this);
   let session = new Session();
   session = session.createSession(domain, user, pass);
-  session.setGlobalSocketTimeout(2000);
+  session.setGlobalSocketTimeout(7000);
 
   let comServer = new ComServer(new Clsid(clsid), address, session);
-
+  
   await comServer.init();
-
+  console.log(`debug`);
   let comObject = await comServer.createInstance();
 
   let opcServer = new OPCServer(opts);

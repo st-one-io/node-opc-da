@@ -91,7 +91,6 @@ class OPCServer extends events.EventEmitter {
         // now that we have the comObj, we can get the events emitted
         this._comObj.on('disconnected', function(){
             this.emit('disconnected');
-            console.log("CONNECTION LOST");
         });
         debug("OPCServer inited successfully");
     }
@@ -219,7 +218,7 @@ class OPCServer extends events.EventEmitter {
             if (result.lenght == 0)
                 throw new Error(String(hresult));
             else 
-                console.log(new Error(String(hresult)));
+                debug(new Error(String(hresult)));
         }
 
         return result[0].getString();
@@ -251,7 +250,7 @@ class OPCServer extends events.EventEmitter {
             if (result.lenght == 0)
                 throw new Error(String(hresult));
             else 
-                console.log(new Error(String(hresult)));
+                debug(new Error(String(hresult)));
         }
 
         let group = new OPCGroupStateManager();
@@ -296,7 +295,7 @@ class OPCServer extends events.EventEmitter {
             if (result.lenght == 0)
                 throw new Error(String(hresult));
             else 
-                console.log(new Error(String(hresult)));
+                debug(new Error(String(hresult)));
         }
 
         let resStruct = result[0].getValue().getReferent();

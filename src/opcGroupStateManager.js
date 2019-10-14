@@ -78,8 +78,7 @@ class OPCGroupStateManager extends EventEmitter {
   }
 
   /**
-   * @returns {Promise<{{name: string}, {state: GroupProperties}}>}
-   * @opNum 0
+   * @returns {Object<{name: string}, {state: GroupProperties}}>}
    */
   async getState() {
     debug("Querying OPCServer for the current state of the group...");

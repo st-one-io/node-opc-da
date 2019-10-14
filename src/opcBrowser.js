@@ -30,10 +30,6 @@ class OPCBrowser {
 
     this._comObj = await unknown.queryInterface(constants.iid.IOPCBrowseServerAddressSpace_IID);
 
-    this._comObj.on('disconnected', function(){
-      console.log("CONNECTION LOST");
-    });
-
     debug("OPCBrowser successfully created.");
   }
 
@@ -194,7 +190,7 @@ class OPCBrowser {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debug(new Error(String(hresult)));
     }
 
     let resultPtr = result[0].getValue();
@@ -228,7 +224,7 @@ class OPCBrowser {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debug(new Error(String(hresult)));
     }
 
     let enumResults = new EnumString();

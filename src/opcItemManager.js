@@ -152,7 +152,7 @@ class OPCItemManager {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debug(new Error(String(hresult)));
     }
 
     let results = result[0].getValue().getReferent().getArrayInstance();
@@ -291,7 +291,7 @@ class OPCItemManager {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debug(new Error(String(hresult)));
     }
     debug("Items successfully removed.");
     return result[0].getValue().getReferent().getArrayInstance();
@@ -336,7 +336,7 @@ class OPCItemManager {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debugg(new Error(String(hresult)));
     }
 
     let errorCodes = result[0].getValue().getReferent().getArrayInstance();
@@ -404,7 +404,7 @@ class OPCItemManager {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debug(new Error(String(hresult)));
     }
 
     debug("Clients handles setted.");

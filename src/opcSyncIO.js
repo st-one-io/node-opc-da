@@ -31,9 +31,6 @@ class OPCSyncIO {
 
     this._comObj = await unknown.queryInterface(constants.iid.IOPCSyncIO_IID);
 
-    this._comObj.on('disconnected', function(){
-      console.log("CONNECTION LOST");
-    });
     debug("OPCSyncIO successfully initted.");
   }
 
@@ -99,7 +96,7 @@ class OPCSyncIO {
         else 
             throw new Error(String(hresult));
     }
-
+    //console.log(result);
     let results = result[0].getValue().getReferent().getArrayInstance();
     let errorCodes = result[1].getValue().getReferent().getArrayInstance();
 
@@ -174,7 +171,7 @@ class OPCSyncIO {
         if (result.lenght == 0)
             throw new Error(String(hresult));
         else 
-            console.log(new Error(String(hresult)));
+            debug(new Error(String(hresult)));
     }
 
     return result[0].getReferent().getArrayInstance();

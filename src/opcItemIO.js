@@ -44,7 +44,6 @@ class OPCItemIO {
    */
   async read(items) {
     if (!this._comObj) throw new Error("Not initialized");
-
   }
 
   /**
@@ -56,7 +55,6 @@ class OPCItemIO {
   async writeVQT(items) {
     if (!this._comObj) throw new Error("Not initialized");
   }
-
 }
 
 module.exports = OPCItemIO;

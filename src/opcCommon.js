@@ -50,7 +50,6 @@ class OPCCommon {
    */
   async getLocaleID() {
     if (!this._comObj) throw new Error("Not initialized");
-
   }
 
   /**
@@ -59,7 +58,6 @@ class OPCCommon {
    */
   async queryAvailableLocaleIDs() {
     if (!this._comObj) throw new Error("Not initialized");
-
   }
 
   /**
@@ -71,7 +69,6 @@ class OPCCommon {
    */
   async getErrorString(error, localeID) {
     if (!this._comObj) throw new Error("Not initialized");
-
   }
 
   /**
@@ -81,9 +78,7 @@ class OPCCommon {
    */
   async setClientName(name) {
     if (!this._comObj) throw new Error("Not initialized");
-
   }
-
 }
 
 module.exports = OPCCommon;
