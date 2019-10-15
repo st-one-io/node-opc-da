@@ -7,19 +7,20 @@ This node was created by [Smart-Tech](https://netsmarttech.com) as part of the [
 ## Table of Contents
 - [Install](#install)
 - [Usage](#usage)
-  - [OPC Server](#OPCServer)
-    - [Creating a Server](#CreatingaServer)
-    - [Deleting  a Server](#DeletingaServer)
-  - [OPC Browse](#OPCBrowser)
-    - [Flat browsing](#Flatbrowsing)
-    - [Tree browsing](#Treebrowsing)
-  - [OPC Groups](#OPCGroups)
-    - [Creating a Group](#CreatingaGroup)
-    - [Removing a Group](#RemovingaGroup)
-  - [OPC Items](#OPCItems)
-    - [Adding an Item](#AddinganItem)
-    - [Validating an Item](#ValidatinganItem)
-  - [Reading with OPC Sync](#ReadingwithOPCSync)
+  - [OPC Server](#opc-server)
+    - [Creating a Server](#creating-a-server)
+    - [Deleting  a Server](#deleting-a-server)
+  - [OPC Browse](#opc-browser)
+    - [Flat browsing](#flat-browsing)
+    - [Tree browsing](#tree-browsing)
+  - [OPC Groups](#opc-groups)
+    - [Creating a Group](#creating-a-group)
+    - [Removing a Group](#removing-a-group)
+  - [OPC Items](#opc-items)
+    - [Adding an Item](#adding-an-item)
+    - [Validating an Item](#validating-an-item)
+  - [Reading with OPC Sync](#reading-with-opc-sync)
+- [Disclaimer](#disclaimer)
 - [Contributing](#contributing)
 
 ## Install
@@ -42,11 +43,13 @@ An OPC server is on object you will be using as the basis for every operation an
 // creates a COM Session from a domain, an username, and a password
 let comSession = new Session();
 comSession = comSession.createSession(domain, username, password);
+
 // sets a global timeout for connections related to this session
 comSession.setGlobalSocketTimeout(timeout);
 
 // create a COM Server from a classid, an IP address and the previously created session
 let comServer = new ComServer(clsid, address, comSession);
+
 // star the COM Server
 await comServer.init();
 
