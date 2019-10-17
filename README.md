@@ -169,6 +169,6 @@ This is a partial implementation and there are lots that could be done to improv
 
 ## License
 
-Copyright: (c) 2019, Smart-Tech, Guilherme Francescon Cittolin <guilherme.francescon@netsmarttech.com>
-
-GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+License
+-----------
+Copyright 2017 Smart-Tech, [Apache 2.0 license](LICENSE).
