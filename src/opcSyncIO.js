@@ -7,9 +7,9 @@
 const constants = require('./constants.js');
 const filetime = require('./filetime');
 const util = require('util');
-const debug = util.debuglog('opc-da');
+const debug = util.debuglog('node-opc-da');
 
-const { CallBuilder, ComArray, ComValue, Flags, Pointer, Struct, Variant, Types } = require('dcom');
+const { CallBuilder, ComArray, ComValue, Flags, Pointer, Struct, Variant, Types } = require('node-dcom');
 
 /**
  * Represents an OPC Sync IO Object

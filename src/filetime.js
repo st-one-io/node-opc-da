@@ -1,6 +1,6 @@
 //@ts-check
 
-const {Struct} = require('dcom');
+const {Struct} = require('node-dcom');
 
 class FileTime {
 

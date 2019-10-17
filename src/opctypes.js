@@ -1,7 +1,7 @@
 // @ts-check
 
 const constants = require('./constants');
-const dcom = require('dcom');
+const dcom = require('node-dcom');
 
 /**
  * This file contain the function definitions for OPC types that dont need a whole class for themselves

@@ -13,9 +13,9 @@ const OPCItemProperties = require('./opcItemProperties');
 const OPCGroupStateManager = require('./opcGroupStateManager');
 const filetime = require('./filetime');
 const util = require('util');
-const debug = util.debuglog('opca-da');
+const debug = util.debuglog('node-opca-da');
 const events = require('events');
-const { CallBuilder, ComString, ComValue, Flags, Pointer, Struct, Types } = require('dcom');
+const { CallBuilder, ComString, ComValue, Flags, Pointer, Struct, Types } = require('node-dcom');
 
 const groupCache = new WeakMap();
 

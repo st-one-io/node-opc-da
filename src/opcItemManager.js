@@ -6,9 +6,9 @@
 
 const constants = require('./constants.js');
 const util = require('util');
-const debug = util.debuglog('opc-da');
+const debug = util.debuglog('node-opc-da');
 
-const { CallBuilder, ComArray, ComString, ComValue, Flags, Pointer, Struct, Variant, Types } = require('dcom');
+const { CallBuilder, ComArray, ComString, ComValue, Flags, Pointer, Struct, Variant, Types } = require('node-dcom');
 
 /**
  * @typedef {object} ItemStruct

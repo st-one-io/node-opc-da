@@ -9,10 +9,10 @@ const OPCItemManager = require('./opcItemManager.js');
 const OPCSyncIO = require('./opcSyncIO.js');
 const OPCAsyncIO = require('./opcAsyncIO.js');
 const util = require('util');
-const debug = util.debuglog('opc-da');
+const debug = util.debuglog('node-opc-da');
 const { EventEmitter } = require('events');
 
-const { CallBuilder, ComString, ComValue, Flags, Pointer, types} = require('dcom');
+const { CallBuilder, ComString, ComValue, Flags, Pointer, types} = require('node-dcom');
 
 
 /**

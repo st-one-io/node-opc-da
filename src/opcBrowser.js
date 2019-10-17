@@ -5,10 +5,10 @@
 */
 
 const constants = require('./constants.js');
-const {CallBuilder, ComString, ComValue, Types, Pointer, Flags} = require('dcom');
+const {CallBuilder, ComString, ComValue, Types, Pointer, Flags} = require('node-dcom');
 const EnumString = require('./enumString');
 const util = require('util');
-const debug = util.debuglog('opc-da');
+const debug = util.debuglog('node-opc-da');
 
 /**
  * Represents an OPC Browser

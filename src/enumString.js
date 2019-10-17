@@ -5,9 +5,9 @@
 */
 
 const constants = require('./constants.js');
-const dcom = require('dcom');
+const dcom = require('node-dcom');
 const util = require('util');
-const debug = util.debuglog('opc-da');
+const debug = util.debuglog('node-opc-da');
 
 /**
  * Represents an EnumString
