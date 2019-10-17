@@ -168,7 +168,4 @@ This is a partial implementation and there are lots that could be done to improv
 
 
 ## License
-
-License
------------
 Copyright 2017 Smart-Tech, [Apache 2.0 license](LICENSE).
