@@ -1,6 +1,6 @@
 {
   "name": "node-opc-da",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A library to communicate with OPC-DA servers",
   "main": "src/index.js",
   "scripts": {
