@@ -7,6 +7,7 @@
 const constants = require('./constants.js');
 const filetime = require('./filetime');
 const util = require('util');
+const dcom = require('node-dcom');
 const debug = util.debuglog('node-opc-da');
 
 const { CallBuilder, ComArray, ComValue, Flags, Pointer, Struct, Variant, Types } = require('node-dcom');
@@ -109,9 +110,7 @@ class OPCSyncIO {
         timestamp: filetime.fromStruct(results[i].getValue().getMember(1).getValue()).getDate(),
         quality: results[i].getValue().getMember(2).getValue(),
         reserved: results[i].getValue().getMember(3).getValue(),
-        value: (!results[i].getValue().getMember(4).getValue().member.getValue().referent.isArray) ? 
-          results[i].getValue().getMember(4).getValue().member.getValue().referent.obj.getValue() :
-          results[i].getValue().getMember(4).getValue().member.getValue().referent.getArray(0).memberArray,      
+        value: this.extractValue(results[i])    
       };
       res.push(resObj);
       if (errorCodes[i].getValue() != 0) {
@@ -127,6 +126,39 @@ class OPCSyncIO {
       }
     }
     return res;
+  }
+
+  extractValue(item){
+    // first we decapsulate from the Struct
+    item = (!item.getValue().getMember(4).getValue().member.getValue().referent.isArray) ? 
+    item.getValue().getMember(4).getValue().member.getValue().referent.obj.getValue() :
+    item.getValue().getMember(4).getValue().member.getValue().referent.getArray(0).memberArray;
+
+    if (item == null) return item;
+
+    if (item instanceof dcom.ComString ||
+      item .constructor.name == "ComString") {
+      if (item.member) {
+          item  = item.member._obj.referent._obj;
+      }
+      // in case is a common string
+      if (item instanceof dcom.Pointer ||
+          item.constructor.type == "Pointer") {
+          item = item.referent._obj;
+      }  
+    } else if (item instanceof dcom.ComValue ||
+        item.constructor.name == "ComValue") {
+        item = item._obj;
+    } else if (item instanceof Array) {    
+      for (let i = 0; i < item.length; i++) {
+        if (item[i]._type == 23){
+            item[i] = item[i]._obj.member._obj.referent._obj;
+        } else {
+            item[i] = item[i]._obj;
+        }
+      }
+    }
+    return item;
   }
 
   /**
@@ -176,7 +208,6 @@ class OPCSyncIO {
 
     return result[0].getReferent().getArrayInstance();
   }
-
 }
 
 module.exports = OPCSyncIO;
