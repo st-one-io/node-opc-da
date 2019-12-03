@@ -1,6 +1,7 @@
 //@ts-check
 
 const {Struct} = require('node-dcom');
+const Long = require('long');
 
 class FileTime {
 
@@ -34,16 +35,15 @@ class FileTime {
     }
 
     _computeDate(){
-        let i = 0xFFFFFFFF & this._hi;
-        i <<= 32;
-        let j = 0xFFFFFFFFFFFFFFFF & i;
+        let ulong = new Long(this._lo, this._hi, true).div(10000);
+        let epochBase = ulong.sub(11644473600000);
 
-        i = 0xFFFFFFFF & this._lo;
-        j += i;
-        j /= 10000;
-        j -= 11644473600000;
+        if (epochBase.greaterThan(ulong))
+            epochBase = epochBase.toSigned();
+        else 
+            epochBase = epochBase.toNumber();
 
-        this._date = new Date(j).toUTCString();
+        this._date = new Date(epochBase);
     }
 
     toString(){

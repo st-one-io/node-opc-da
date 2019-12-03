@@ -1,6 +1,6 @@
 {
   "name": "node-opc-da",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A library to communicate with OPC-DA servers",
   "main": "src/index.js",
   "scripts": {
@@ -21,6 +21,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "node-dcom": "^1.0.4",
-    "random": "^2.1.1"
+    "random": "^2.1.1",
+    "long": "^4.0.0"
   }
 }
