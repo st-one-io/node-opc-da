@@ -86,8 +86,8 @@ class OPCSyncIO {
     let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(resStructArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
     callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
-
-    let resultObj = await this._comObj.call(callObject);
+    
+	let resultObj = await this._comObj.call(callObject);
 
     let hresult = resultObj.hresult;
     let result = resultObj.getResults();
@@ -97,7 +97,6 @@ class OPCSyncIO {
         else 
             throw new Error(String(hresult));
     }
-    //console.log(result);
     let results = result[0].getValue().getReferent().getArrayInstance();
     let errorCodes = result[1].getValue().getReferent().getArrayInstance();
 
@@ -175,25 +174,26 @@ class OPCSyncIO {
 
     if (!(writes.length > 0)) return [];
 
-    let callObject = new CallBuilder(true);
-    callObject.setOpnum(0);
-
     let handles = [];
     let values = [];
     for (const write of writes) {
-      let valVariant = new Variant(new ComValue(write.value, write.type), true);
+      var valVariant = new Variant.Variant(new ComValue(write.value, write.type));
+
       if(Array.isArray(write.value) && write.type == Types.BOOLEAN) {
         valVariant.setFlag(Flags.FLAG_REPRESENTATION_VARIANT_BOOL);
       }
-      handles.push(write.handle);
-      values.push(valVariant);
+      handles.push(new ComValue(write.handle, Types.INTEGER));
+      values.push(new ComValue(valVariant, Types.VARIANT));
     }
-
+	
+    let callObject = new CallBuilder(true);
+    callObject.setOpnum(1);
+	
     callObject.addInParamAsInt(writes.length, Flags.FLAG_NULL);
     callObject.addInParamAsArray(new ComArray(new ComValue(handles, Types.INTEGER), true), Flags.FLAG_NULL);
     callObject.addInParamAsArray(new ComArray(new ComValue(values, Types.VARIANT), true), Flags.FLAG_NULL);
-    let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
-    callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
+	let errCodesArray = new ComArray(new ComValue(null, Types.INTEGER), null, 1, true)
+	callObject.addOutParamAsObject(new ComValue(new Pointer(new ComValue(errCodesArray, Types.COMARRAY)), Types.POINTER), Flags.FLAG_NULL);
 
     let resultObj = await this._comObj.call(callObject);
 
@@ -206,7 +206,7 @@ class OPCSyncIO {
             debug(new Error(String(hresult)));
     }
 
-    return result[0].getReferent().getArrayInstance();
+    return result[0].getValue().getReferent().getArrayInstance();
   }
 }
 
